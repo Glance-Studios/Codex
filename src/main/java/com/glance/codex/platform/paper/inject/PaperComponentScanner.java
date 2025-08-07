@@ -1,6 +1,8 @@
 package com.glance.codex.platform.paper.inject;
 
 import com.glance.codex.bootstrap.GuiceServiceLoader;
+import com.glance.codex.platform.paper.api.collectable.CollectableManager;
+import com.glance.codex.platform.paper.api.collectable.base.CollectableRepositoryConfig;
 import com.glance.codex.platform.paper.command.engine.CommandHandler;
 import com.glance.codex.platform.paper.command.engine.CommandManager;
 import com.glance.codex.platform.paper.command.engine.argument.TypedArgParser;
@@ -14,6 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,6 +44,8 @@ public class PaperComponentScanner {
         // Config Loading
         for (Class<? extends Config.Handler> clazz : GuiceServiceLoader.load(Config.Handler.class, classLoader)) {
             try {
+                if (CollectableRepositoryConfig.class.isAssignableFrom(clazz)) continue;
+
                 Config.Handler config = injector.getInstance(clazz);
 
                 @SuppressWarnings("unchecked")
@@ -65,6 +70,26 @@ public class PaperComponentScanner {
                 logError(logger, "enable Manager", clazz, e);
             }
         }
+
+        // Collectable Config Loading - after manager setup
+        for (Class<? extends Config.Handler> clazz : GuiceServiceLoader.load(Config.Handler.class, classLoader)) {
+            try {
+                if (!CollectableRepositoryConfig.class.isAssignableFrom(clazz)) continue;
+
+                @SuppressWarnings("unchecked")
+                Class<CollectableRepositoryConfig> typedClass = (Class<CollectableRepositoryConfig>) clazz;
+
+                List<CollectableRepositoryConfig> repos = ConfigController
+                        .loadConfigDirectory(plugin, typedClass, plugin.getDataFolder());
+                repos.forEach(repo -> {
+                    // todo register best way somehow
+                    injector.getInstance(CollectableManager.class).registerRepository(repo);
+                });
+            } catch (Exception e) {
+                logError(logger, "load collectable config", clazz, e);
+            }
+        }
+
 
         // Bukkit Event Listeners
         for (Class<? extends Listener> clazz : GuiceServiceLoader.load(

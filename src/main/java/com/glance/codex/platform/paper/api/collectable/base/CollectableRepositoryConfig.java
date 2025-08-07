@@ -13,7 +13,7 @@ import java.util.Map;
 @Accessors(fluent = true)
 @Config(fileName = "collectables/*")
 @AutoService(Config.Handler.class)
-public class CollectableRepositoryConfig {
+public class CollectableRepositoryConfig implements Config.Handler {
 
     @ConfigPath("namespace")
     private String namespace;

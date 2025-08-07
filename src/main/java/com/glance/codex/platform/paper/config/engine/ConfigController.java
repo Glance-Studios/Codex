@@ -187,6 +187,68 @@ public final class ConfigController {
         return instance;
     }
 
+    public static <T extends Config.Handler> List<T> loadConfigDirectory(
+            Plugin plugin, Class<T> configClass, File baseDir
+    ) {
+        Config meta = configClass.getAnnotation(Config.class);
+        if (meta == null) {
+            throw new ConfigLoadException("Missing @Config annotation on " + configClass.getSimpleName());
+        }
+
+        if (!meta.fileName().contains("*")) {
+            throw new ConfigLoadException("Config fileName must contain '*' for directory loading: " + meta.fileName());
+        }
+
+        ConfigFormat.Type formatType = meta.format();
+        ConfigFormat formatHandler = formatHandlers.get(formatType);
+        if (formatHandler == null) {
+            throw new UnsupportedOperationException("Unsupported config format: " + formatType);
+        }
+
+        String directoryName = meta.fileName().substring(0, meta.fileName().indexOf('*'));
+        File directory = new File(baseDir, directoryName);
+
+        if (!directory.exists() || !directory.isDirectory()) {
+            if (!directory.mkdirs()) {
+                throw new ConfigLoadException("Failed to create or access config directory: " + directory.getAbsolutePath());
+            }
+        }
+
+        List<T> instances = new ArrayList<>();
+        File[] files = directory.listFiles((dir, name) -> {
+            for (String ext : formatType.getExtensions()) {
+                if (name.toLowerCase().endsWith("." + ext.toLowerCase())) return true;
+            }
+            return false;
+        });
+
+        if (files == null || files.length == 0) {
+            plugin.getLogger().warning("No config files found in: " + directory.getAbsolutePath());
+            return instances;
+        }
+
+        for (File file : files) {
+            try {
+                T instance = configClass.getDeclaredConstructor().newInstance();
+                ConfigurationSection section = formatHandler.load(file, meta.section());
+
+                // todo do we cache at all?
+                //loadedSections.put(configClass, section);
+                //configFiles.put(configClass, file);
+
+                boolean changed = syncFields(instance, section, true, meta.writeDefaults());
+                if (changed) writeToDisk(instance, false);
+
+                new ConfigLoadEvent(configClass, instance, changed);
+                instances.add(instance);
+            } catch (Exception e) {
+                throw new ConfigLoadException("Failed to load config: " + file.getName(), e);
+            }
+        }
+
+        return instances;
+    }
+
     /**
      * Updates the given config instance's fields by reading from the
      * associated {@link ConfigurationSection}
