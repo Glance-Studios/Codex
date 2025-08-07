@@ -4,6 +4,8 @@ import com.glance.codex.bootstrap.GuiceServiceLoader;
 import com.glance.codex.platform.paper.command.engine.CommandHandler;
 import com.glance.codex.platform.paper.command.engine.CommandManager;
 import com.glance.codex.platform.paper.command.engine.argument.TypedArgParser;
+import com.glance.codex.platform.paper.config.engine.ConfigController;
+import com.glance.codex.platform.paper.config.engine.annotation.Config;
 import com.glance.codex.utils.lifecycle.Manager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -21,6 +23,7 @@ import java.util.logging.Logger;
  * By default, supports common/known plugin lifecycle types:
  * <li>{@link Listener}</li>
  * <li>{@link Manager}</li>
+ * <li>{@link Config}</li>
  * <li>{@link CommandHandler}</li>
  * <li>Anything to come</li>
  * </p>
@@ -34,6 +37,20 @@ public class PaperComponentScanner {
         logger.info("[AutoScan] Starting auto component scan for " + plugin.getName());
 
         ClassLoader classLoader = plugin.getClass().getClassLoader();
+
+        // Config Loading
+        for (Class<? extends Config.Handler> clazz : GuiceServiceLoader.load(Config.Handler.class, classLoader)) {
+            try {
+                Config.Handler config = injector.getInstance(clazz);
+
+                @SuppressWarnings("unchecked")
+                Class<Config.Handler> typedClass = (Class<Config.Handler>) clazz;
+                ConfigController.loadConfig(plugin, typedClass, config);
+                logger.fine("[AutoScan] Loaded Config Bean: " + clazz.getName());
+            } catch (Exception e) {
+                logError(logger, "load config", clazz, e);
+            }
+        }
 
         // Manager Enable
         for (Class<? extends Manager> clazz : GuiceServiceLoader.load(

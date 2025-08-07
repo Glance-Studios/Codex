@@ -1,5 +1,6 @@
 package com.glance.codex.platform.paper;
 
+import com.glance.codex.platform.paper.config.engine.ConfigController;
 import com.glance.codex.platform.paper.inject.CodexModule;
 import com.glance.codex.platform.paper.inject.PaperComponentScanner;
 import com.google.inject.Guice;
@@ -18,6 +19,8 @@ public class CodexPlugin extends JavaPlugin {
     public void onLoad() {
         this.injector = Guice.createInjector(new CodexModule(this));
         getLogger().setLevel(Level.FINE);
+
+        ConfigController.init();
     }
 
     @Override
@@ -28,6 +31,10 @@ public class CodexPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         PaperComponentScanner.scanAndCleanup(this, this.injector);
+    }
+
+    public static CodexPlugin getInstance() {
+        return getPlugin(CodexPlugin.class);
     }
 
 }
