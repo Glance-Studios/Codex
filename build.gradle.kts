@@ -19,6 +19,7 @@ repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.triumphteam.dev/snapshots")
     maven("https://jitpack.io")
+    maven("https://repo.extendedclip.com/releases/")
 }
 
 dependencies {
@@ -37,6 +38,9 @@ dependencies {
     implementation("com.google.inject.extensions:guice-assistedinject:7.0.0")
     annotationProcessor("com.google.auto.service:auto-service:1.1.1")
     compileOnly("com.google.auto.service:auto-service-annotations:1.1.1")
+
+    // PAPI
+    compileOnly("me.clip:placeholderapi:2.11.6")
 }
 
 java {
