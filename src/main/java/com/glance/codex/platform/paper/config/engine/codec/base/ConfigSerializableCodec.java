@@ -34,7 +34,6 @@ public class ConfigSerializableCodec<T extends ConfigSerializable> implements Ty
     public @Nullable T decode(ConfigurationSection section, String path, Type type, @Nullable T defaultValue) {
         Object raw = section.get(path);
         if (raw == null) {
-            log.warn("Raw at {} was null :c", path);
             return defaultValue;
         }
 

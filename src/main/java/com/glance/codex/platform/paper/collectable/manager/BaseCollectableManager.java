@@ -1,9 +1,11 @@
-package com.glance.codex.platform.paper.impl.manager;
+package com.glance.codex.platform.paper.collectable.manager;
 
 import com.glance.codex.platform.paper.api.collectable.Collectable;
 import com.glance.codex.platform.paper.api.collectable.CollectableManager;
 import com.glance.codex.platform.paper.api.collectable.CollectableRepository;
 import com.glance.codex.platform.paper.api.collectable.Discoverable;
+import com.glance.codex.platform.paper.api.collectable.config.RepositoryConfig;
+import com.glance.codex.platform.paper.api.collectable.base.factory.BaseCollectableRepoFactory;
 import com.glance.codex.utils.lifecycle.Manager;
 import com.google.auto.service.AutoService;
 import com.google.inject.Inject;
@@ -18,25 +20,32 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
 @AutoService(Manager.class)
-public class CollectableManagerImpl implements CollectableManager {
+public class BaseCollectableManager implements CollectableManager {
 
-    private final Map<String, CollectableRepository<?>> repositories = new ConcurrentHashMap<>();
+    private final BaseCollectableRepoFactory repositoryFactory;
+
+    private final Map<String, CollectableRepository> repositories = new ConcurrentHashMap<>();
 
     @Inject
-    public CollectableManagerImpl(
-        // todo injectables
+    public BaseCollectableManager(
+            @NotNull final BaseCollectableRepoFactory repositoryFactory
     ) {
-
+        this.repositoryFactory = repositoryFactory;
     }
 
     @Override
-    public void registerRepository(CollectableRepository<?> repo) {
+    public CollectableRepository loadFromConfig(RepositoryConfig config) {
+        return this.repositoryFactory.create(config.namespace(), config.entries());
+    }
+
+    @Override
+    public void registerRepository(CollectableRepository repo) {
         repositories.put(repo.namespace(), repo);
     }
 
     @Override
     public @Nullable Collectable get(@NotNull NamespacedKey key) {
-        CollectableRepository<?> repo = repositories.get(key.namespace());
+        CollectableRepository repo = repositories.get(key.namespace());
         return repo != null ? repo.get(key) : null;
     }
 

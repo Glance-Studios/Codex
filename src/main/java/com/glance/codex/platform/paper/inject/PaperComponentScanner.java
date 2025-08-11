@@ -2,12 +2,20 @@ package com.glance.codex.platform.paper.inject;
 
 import com.glance.codex.bootstrap.GuiceServiceLoader;
 import com.glance.codex.platform.paper.api.collectable.CollectableManager;
-import com.glance.codex.platform.paper.api.collectable.base.CollectableRepositoryConfig;
+import com.glance.codex.platform.paper.api.collectable.CollectableRepository;
+import com.glance.codex.platform.paper.api.collectable.config.RepositoryConfig;
+import com.glance.codex.platform.paper.collectable.config.CollectableRepositoryConfig;
+import com.glance.codex.platform.paper.api.collectable.type.CollectableType;
 import com.glance.codex.platform.paper.command.engine.CommandHandler;
 import com.glance.codex.platform.paper.command.engine.CommandManager;
 import com.glance.codex.platform.paper.command.engine.argument.TypedArgParser;
 import com.glance.codex.platform.paper.config.engine.ConfigController;
 import com.glance.codex.platform.paper.config.engine.annotation.Config;
+import com.glance.codex.platform.paper.notebooks.config.NoteBookConfig;
+import com.glance.codex.platform.paper.config.model.BookConfig;
+import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
+import com.glance.codex.platform.paper.collectable.type.CollectableTypeRegistry;
+import com.glance.codex.platform.paper.notebooks.config.NoteBookConfigLoader;
 import com.glance.codex.utils.lifecycle.Manager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -15,8 +23,11 @@ import lombok.experimental.UtilityClass;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.LoggerFactory;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,6 +46,9 @@ import java.util.logging.Logger;
 @UtilityClass
 public class PaperComponentScanner {
 
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(PaperComponentScanner.class);
+
+    @SuppressWarnings("unchecked")
     public void scanAndInitialize(@NotNull final Plugin plugin, @NotNull Injector injector) {
         Logger logger = plugin.getLogger();
         logger.info("[AutoScan] Starting auto component scan for " + plugin.getName());
@@ -44,7 +58,7 @@ public class PaperComponentScanner {
         // Config Loading
         for (Class<? extends Config.Handler> clazz : GuiceServiceLoader.load(Config.Handler.class, classLoader)) {
             try {
-                if (CollectableRepositoryConfig.class.isAssignableFrom(clazz)) continue;
+                if (Config.Contract.class.isAssignableFrom(clazz)) continue;
 
                 Config.Handler config = injector.getInstance(clazz);
 
@@ -71,25 +85,60 @@ public class PaperComponentScanner {
             }
         }
 
-        // Collectable Config Loading - after manager setup
-        for (Class<? extends Config.Handler> clazz : GuiceServiceLoader.load(Config.Handler.class, classLoader)) {
-            try {
-                if (!CollectableRepositoryConfig.class.isAssignableFrom(clazz)) continue;
-
-                @SuppressWarnings("unchecked")
-                Class<CollectableRepositoryConfig> typedClass = (Class<CollectableRepositoryConfig>) clazz;
-
-                List<CollectableRepositoryConfig> repos = ConfigController
-                        .loadConfigDirectory(plugin, typedClass, plugin.getDataFolder());
-                repos.forEach(repo -> {
-                    // todo register best way somehow
-                    injector.getInstance(CollectableManager.class).registerRepository(repo);
-                });
-            } catch (Exception e) {
-                logError(logger, "load collectable config", clazz, e);
+        // Collectable Type Registration
+        CollectableTypeRegistry collectableTypeRegistry = injector.getInstance(CollectableTypeRegistry.class);
+        if (collectableTypeRegistry != null) {
+            for (Class<? extends CollectableType> clazz : GuiceServiceLoader.load(CollectableType.class, classLoader)) {
+                try {
+                    CollectableType type = injector.getInstance(clazz);
+                    collectableTypeRegistry.register(type);
+                    logger.fine("[AutoScan] CollectableType Registered: " + clazz.getName());
+                } catch (Exception e) {
+                    logError(logger, "registering CollectableType", clazz, e);
+                }
             }
         }
 
+        // Collectable Config Loading - after manager setup
+        CollectableManager collectableManager = injector.getInstance(CollectableManager.class);
+        if (collectableManager != null) {
+            for (Class<? extends Config.Handler> clazz : GuiceServiceLoader.load(Config.Handler.class, classLoader)) {
+                try {
+                    if (!RepositoryConfig.class.isAssignableFrom(clazz)) continue;
+
+                    logger.info("GOT REPO CLASS: " + clazz.getSimpleName());
+
+                    Class<CollectableRepositoryConfig> typedClass = (Class<CollectableRepositoryConfig>) clazz;
+
+                    List<CollectableRepositoryConfig> repoCfgs = ConfigController
+                            .loadByPattern(typedClass, plugin.getDataFolder(), injector);
+
+                    for (CollectableRepositoryConfig cfg : repoCfgs) {
+                        logger.info("OMG WE HAVE collectable repo config: " + cfg);
+                        if (!cfg.enabled()) continue;
+                        CollectableRepository repo = collectableManager.loadFromConfig(cfg);
+                        collectableManager.registerRepository(repo);
+                    }
+                } catch (Exception e) {
+                    logError(logger, "load collectable config", clazz, e);
+                }
+            }
+        }
+
+        // Scan NoteBook configs
+        for (Class<? extends Config.Handler> clazz : GuiceServiceLoader.load(Config.Handler.class, classLoader)) {
+            try {
+                if (!NoteBookConfig.class.isAssignableFrom(clazz)) continue;
+
+                Class<NoteBookConfig> typedClass = (Class<NoteBookConfig>) clazz;
+                List<NoteBookConfig> noteConfigs = ConfigController
+                        .loadByPattern(typedClass, plugin.getDataFolder(), injector);
+
+                NoteBookConfigLoader.handleNoteBooks(injector, noteConfigs);
+            } catch (Exception e) {
+                logError(logger, "loading notebook configs", clazz, e);
+            }
+        }
 
         // Bukkit Event Listeners
         for (Class<? extends Listener> clazz : GuiceServiceLoader.load(

@@ -1,5 +1,6 @@
 package com.glance.codex.platform.paper.api.collectable.base;
 
+import com.glance.codex.platform.paper.api.collectable.Collectable;
 import com.glance.codex.platform.paper.api.collectable.CollectableRepository;
 import com.glance.codex.platform.paper.api.text.PlaceholderService;
 import com.glance.codex.platform.paper.command.executor.CommandExecutorService;
@@ -11,17 +12,17 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 
 // todo factory
-public class BaseCollectableRepository implements CollectableRepository<BaseCollectable> {
+public class BaseCollectableRepository implements CollectableRepository {
 
     private final String namespace;
-    private final Map<String, BaseCollectable> entries;
+    private final Map<String, Collectable> entries;
     private final CommandExecutorService commandExecutor;
     private final PlaceholderService resolver;
 
     @Inject
     public BaseCollectableRepository(
         @Assisted String namespace,
-        @Assisted Map<String, BaseCollectable> entries,
+        @Assisted Map<String, Collectable> entries,
         @NotNull final CommandExecutorService commandExecutor,
         @NotNull final PlaceholderService resolver
     ) {
@@ -37,12 +38,12 @@ public class BaseCollectableRepository implements CollectableRepository<BaseColl
     }
 
     @Override
-    public @NotNull Map<String, BaseCollectable> entries() {
+    public @NotNull Map<String, Collectable> entries() {
         return (entries != null) ? this.entries : Map.of();
     }
 
     @Override
-    public @Nullable BaseCollectable get(@NotNull NamespacedKey key) {
+    public @Nullable Collectable get(@NotNull NamespacedKey key) {
         return null;
     }
 

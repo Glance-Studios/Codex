@@ -23,6 +23,8 @@ public class BaseCollectable implements Collectable, Discoverable, ConfigSeriali
     @ConfigField
     private String key;
 
+    @ConfigField String type;
+
     @ConfigField
     private String displayName;
 

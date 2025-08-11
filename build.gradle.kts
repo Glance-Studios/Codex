@@ -64,10 +64,10 @@ tasks {
 }
 
 configure<PaperPluginDescription> {
-    name = "PlinkoBlocks"
+    name = "CollectablesCodex"
 
     apiVersion = "1.20"
     version = "Git-${indraGit.commit()?.name?.take(7) ?: "unknown"}"
 
-    main = "com.glance.plinko.platform.paper.PlinkoBlocks"
+    main = "com.glance.codex.platform.paper.CodexPlugin"
 }

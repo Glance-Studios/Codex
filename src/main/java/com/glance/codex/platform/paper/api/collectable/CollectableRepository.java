@@ -6,16 +6,16 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
-public interface CollectableRepository<T extends Collectable> {
+public interface CollectableRepository {
 
     @NotNull String namespace();
 
     @NotNull
-    Map<String, T> entries();
+    Map<String, Collectable> entries();
 
-    @Nullable T get(@NotNull NamespacedKey key);
+    @Nullable Collectable get(@NotNull NamespacedKey key);
 
-    default @Nullable T get(@NotNull String id) {
+    default @Nullable Collectable get(@NotNull String id) {
         return get(new NamespacedKey(namespace(), id));
     }
 

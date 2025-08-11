@@ -24,6 +24,8 @@ import com.glance.codex.utils.ReflectionUtils;
 import com.glance.codex.utils.data.TypeConverter;
 import com.glance.codex.utils.data.Validator;
 import com.glance.codex.utils.io.FileUtils;
+import com.google.inject.Injector;
+import lombok.extern.slf4j.Slf4j;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.plugin.Plugin;
@@ -44,13 +46,18 @@ import java.util.logging.Logger;
  * @author Cammy
  */
 @ApiStatus.Internal
+@Slf4j
 public final class ConfigController {
 
     // Utility Class
     private ConfigController() {}
 
+    // todo move loaded to identity caches
     private final static Map<Class<?>, ConfigurationSection> loadedSections = new HashMap<>();
     private final static Map<Class<?>, File> configFiles = new HashMap<>();
+
+    private final static IdentityHashMap<Object, File> INSTANCE_FILES = new IdentityHashMap<>();
+    private final static IdentityHashMap<Object, ConfigurationSection> INSTANCE_SECTIONS = new IdentityHashMap<>();
 
     private final static Map<ConfigFormat.Type, ConfigFormat> formatHandlers = Map.of(
             ConfigFormat.Type.YAML, new YamlConfigFormat()
@@ -140,7 +147,7 @@ public final class ConfigController {
         }
 
         if (!useDefault || section == null) {
-            String baseName = meta.fileName();
+            String baseName = meta.path();
             List<String> exts = List.of(formatType.getExtensions());
 
             file = FileUtils.findFile(dataFolder, baseName, exts);
@@ -184,19 +191,20 @@ public final class ConfigController {
         // Call load event
         new ConfigLoadEvent(configClass, instance, changed);
 
+        INSTANCE_FILES.put(instance, file);
+        INSTANCE_SECTIONS.put(instance, section);
+
         return instance;
     }
 
-    public static <T extends Config.Handler> List<T> loadConfigDirectory(
-            Plugin plugin, Class<T> configClass, File baseDir
+    public static <T extends Config.Handler> List<T> loadByPattern(
+           Class<T> configClass, File baseDir, Injector injector
     ) {
+        log.info("Loading by pattern for {}", configClass.getSimpleName());
+
         Config meta = configClass.getAnnotation(Config.class);
         if (meta == null) {
             throw new ConfigLoadException("Missing @Config annotation on " + configClass.getSimpleName());
-        }
-
-        if (!meta.fileName().contains("*")) {
-            throw new ConfigLoadException("Config fileName must contain '*' for directory loading: " + meta.fileName());
         }
 
         ConfigFormat.Type formatType = meta.format();
@@ -205,48 +213,47 @@ public final class ConfigController {
             throw new UnsupportedOperationException("Unsupported config format: " + formatType);
         }
 
-        String directoryName = meta.fileName().substring(0, meta.fileName().indexOf('*'));
-        File directory = new File(baseDir, directoryName);
+        List<String> exts = List.of(meta.format().getExtensions());
 
-        if (!directory.exists() || !directory.isDirectory()) {
-            if (!directory.mkdirs()) {
-                throw new ConfigLoadException("Failed to create or access config directory: " + directory.getAbsolutePath());
-            }
-        }
+        List<File> files = ConfigDiscovery.discover(
+                baseDir,
+                effectivePattern(configClass),
+                exts,
+                meta.recursiveDepth(),
+                true);
 
-        List<T> instances = new ArrayList<>();
-        File[] files = directory.listFiles((dir, name) -> {
-            for (String ext : formatType.getExtensions()) {
-                if (name.toLowerCase().endsWith("." + ext.toLowerCase())) return true;
-            }
-            return false;
-        });
+        log.info("Discovered files? {}", files);
 
-        if (files == null || files.length == 0) {
-            plugin.getLogger().warning("No config files found in: " + directory.getAbsolutePath());
-            return instances;
-        }
-
+        List<T> instances = new ArrayList<>(files.size());
         for (File file : files) {
             try {
-                T instance = configClass.getDeclaredConstructor().newInstance();
+                T instance = injector.getInstance(configClass);
                 ConfigurationSection section = formatHandler.load(file, meta.section());
 
-                // todo do we cache at all?
-                //loadedSections.put(configClass, section);
-                //configFiles.put(configClass, file);
+                INSTANCE_FILES.put(instance, file);
+                INSTANCE_SECTIONS.put(instance, section);
 
                 boolean changed = syncFields(instance, section, true, meta.writeDefaults());
                 if (changed) writeToDisk(instance, false);
 
-                new ConfigLoadEvent(configClass, instance, changed);
+                new ConfigLoadEvent(configClass, instance, changed).callEvent();
                 instances.add(instance);
             } catch (Exception e) {
-                throw new ConfigLoadException("Failed to load config: " + file.getName(), e);
+                throw new RuntimeException(e);
             }
         }
 
         return instances;
+    }
+
+    private static String effectivePattern(Class<? extends Config.Handler> type) {
+        Config meta = type.getAnnotation(Config.class);
+        if (meta == null) {
+            throw new ConfigLoadException("Missing @Config annotation on " + type.getSimpleName());
+        }
+
+        String path = meta.path();
+        return path.replace('\\', '/');
     }
 
     /**
@@ -311,8 +318,8 @@ public final class ConfigController {
             return;
         }
 
-        File file = configFiles.get(cls);
-        ConfigurationSection section = loadedSections.get(cls);
+        File file = INSTANCE_FILES.get(instance);
+        ConfigurationSection section = INSTANCE_SECTIONS.get(instance);
         ConfigFormat formatHandler = formatHandlers.get(meta.format());
 
         if (file == null || section == null || formatHandler == null) {
@@ -481,6 +488,13 @@ public final class ConfigController {
      */
     public static Optional<File> getConfigFile(Class<?> cls) {
         return Optional.ofNullable(configFiles.get(cls));
+    }
+
+    /**
+     * Returns an Optional of a loaded File for the given config instance
+     */
+    public static Optional<File> getConfigFile(Config.Handler instance) {
+        return Optional.ofNullable(INSTANCE_FILES.get(instance));
     }
 
     /**

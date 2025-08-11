@@ -1,9 +1,17 @@
 package com.glance.codex.platform.paper.inject;
 
+import com.glance.codex.platform.paper.api.collectable.CollectableManager;
+import com.glance.codex.platform.paper.api.collectable.CollectableRepository;
+import com.glance.codex.platform.paper.api.collectable.base.BaseCollectableRepository;
+import com.glance.codex.platform.paper.api.collectable.base.factory.BaseCollectableRepoFactory;
 import com.glance.codex.platform.paper.api.text.PlaceholderService;
+import com.glance.codex.platform.paper.collectable.manager.BaseCollectableManager;
+import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
+import com.glance.codex.platform.paper.notebooks.book.BaseNotebookRegistry;
 import com.glance.codex.platform.paper.text.DefaultPlaceholderService;
 import com.glance.codex.platform.paper.text.PapiPlaceholderService;
 import com.google.inject.AbstractModule;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -23,11 +31,18 @@ public class CodexModule extends AbstractModule {
         this.bind(Plugin.class).toInstance(plugin);
         this.bind(JavaPlugin.class).toInstance((JavaPlugin) plugin);
 
+        this.bind(CollectableManager.class).to(BaseCollectableManager.class).asEagerSingleton();
+        this.bind(NotebookRegistry.class).to(BaseNotebookRegistry.class).asEagerSingleton();
+
         if (isPapiPresent()) {
-            bind(PlaceholderService.class).to(PapiPlaceholderService.class).asEagerSingleton();
+            this.bind(PlaceholderService.class).to(PapiPlaceholderService.class).asEagerSingleton();
         } else {
-            bind(PlaceholderService.class).to(DefaultPlaceholderService.class).asEagerSingleton();
+            this.bind(PlaceholderService.class).to(DefaultPlaceholderService.class).asEagerSingleton();
         }
+
+        this.install(new FactoryModuleBuilder()
+                .implement(CollectableRepository.class, BaseCollectableRepository.class)
+                .build(BaseCollectableRepoFactory.class));
     }
 
     private boolean isPapiPresent() {
