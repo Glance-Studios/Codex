@@ -6,25 +6,35 @@ import com.glance.codex.utils.lifecycle.Manager;
 import com.google.auto.service.AutoService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Singleton
 @AutoService(Manager.class)
 public class BaseNotebookRegistry implements Manager, NotebookRegistry {
 
     private final Plugin plugin;
+    private final NoteBookRenderService renderService;
+
     private final Map<NamespacedKey, BookConfig> byKey = new ConcurrentHashMap<>();
 
     @Inject
-    public BaseNotebookRegistry(@NotNull final Plugin plugin) {
+    public BaseNotebookRegistry(
+            @NotNull final Plugin plugin,
+            @NotNull final NoteBookRenderService renderService
+    ) {
         this.plugin = plugin;
+        this.renderService = renderService;
     }
 
     @Override
@@ -33,35 +43,55 @@ public class BaseNotebookRegistry implements Manager, NotebookRegistry {
     }
 
     @Override
-    public void register(String namespace, String id, BookConfig cfg) {
+    public void register(@NotNull String namespace, @NotNull String id, @NotNull BookConfig cfg) {
         if (!cfg.enabled()) return;
         NamespacedKey key = new NamespacedKey(namespace, id);
         byKey.put(key, cfg);
     }
 
     @Override
-    public void unregisterNamespace(String namespace) {
+    public void unregisterNamespace(@NotNull String namespace) {
         byKey.keySet().removeIf(k -> k.namespace().equals(namespace));
     }
 
     @Override
-    public Optional<BookConfig> get(NamespacedKey id) {
-        return Optional.empty();
+    public Optional<BookConfig> get(@NotNull NamespacedKey id) {
+        return Optional.ofNullable(byKey.get(id));
     }
 
     @Override
-    public boolean exists(NamespacedKey id) {
+    public boolean exists(@NotNull NamespacedKey id) {
+        return byKey.containsKey(id);
+    }
+
+    @Override
+    public boolean give(@NotNull NamespacedKey id, @NotNull Player player) {
+        BookConfig cfg = this.get(id).orElse(null);
+        if (cfg == null || !cfg.enabled()) return false;
+
+        // todo give item?
         return false;
     }
 
     @Override
-    public boolean give(NamespacedKey id, Player player) {
-        return false;
+    public boolean open(@NotNull NamespacedKey id, @NotNull Player player) {
+        BookConfig cfg = this.get(id).orElse(null);
+        log.warn("Did we get a config from key {} | {}", id, cfg);
+        if (cfg == null || !cfg.enabled()) return false;
+
+        showToPlayer(cfg, player, null);
+        return true;
     }
 
-    @Override
-    public boolean open(NamespacedKey id, Player player) {
-        return false;
+    private void showToPlayer(
+            @NotNull BookConfig cfg,
+            @NotNull Player player,
+            @Nullable Map<String, String> placeholders
+    ) {
+        ItemStack book = renderService.buildWrittenBook(cfg, player, placeholders);
+
+        log.info("About to show {} book: {}", player.getName(), book);
+        plugin.getServer().getScheduler().runTask(plugin, () -> player.openBook(book));
     }
 
     @Override

@@ -52,6 +52,10 @@ tasks {
         dependsOn(shadowJar)
     }
 
+    runServer {
+        minecraftVersion("1.21.6")
+    }
+
     withType<JavaCompile> {
         options.release.set(21)
         options.encoding = Charsets.UTF_8.name()
