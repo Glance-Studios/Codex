@@ -25,7 +25,7 @@ public class NoteBookConfig implements Config.Contract {
     @ConfigPath(value = "book", comments = "Single-book form; should not use if 'book' map is present")
     private BookConfig book;
 
-    @ConfigPath("book")
+    @ConfigPath("books")
     private Map<String, BookConfig> books = new LinkedHashMap<>();
 
 }

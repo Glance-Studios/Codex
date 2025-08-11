@@ -106,15 +106,12 @@ public class PaperComponentScanner {
                 try {
                     if (!RepositoryConfig.class.isAssignableFrom(clazz)) continue;
 
-                    logger.info("GOT REPO CLASS: " + clazz.getSimpleName());
-
                     Class<CollectableRepositoryConfig> typedClass = (Class<CollectableRepositoryConfig>) clazz;
 
-                    List<CollectableRepositoryConfig> repoCfgs = ConfigController
+                    List<CollectableRepositoryConfig> repoConfigs = ConfigController
                             .loadByPattern(typedClass, plugin.getDataFolder(), injector);
 
-                    for (CollectableRepositoryConfig cfg : repoCfgs) {
-                        logger.info("OMG WE HAVE collectable repo config: " + cfg);
+                    for (CollectableRepositoryConfig cfg : repoConfigs) {
                         if (!cfg.enabled()) continue;
                         CollectableRepository repo = collectableManager.loadFromConfig(cfg);
                         collectableManager.registerRepository(repo);

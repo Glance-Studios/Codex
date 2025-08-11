@@ -197,11 +197,10 @@ public final class ConfigController {
         return instance;
     }
 
+    // todo separate type - eg contract/pattern loader/handler only
     public static <T extends Config.Handler> List<T> loadByPattern(
            Class<T> configClass, File baseDir, Injector injector
     ) {
-        log.info("Loading by pattern for {}", configClass.getSimpleName());
-
         Config meta = configClass.getAnnotation(Config.class);
         if (meta == null) {
             throw new ConfigLoadException("Missing @Config annotation on " + configClass.getSimpleName());
@@ -221,8 +220,6 @@ public final class ConfigController {
                 exts,
                 meta.recursiveDepth(),
                 true);
-
-        log.info("Discovered files? {}", files);
 
         List<T> instances = new ArrayList<>(files.size());
         for (File file : files) {
