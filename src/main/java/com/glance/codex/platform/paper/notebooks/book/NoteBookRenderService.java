@@ -94,7 +94,7 @@ public class NoteBookRenderService implements Manager {
         List<String> lines = wrap(content, (cfg.wrap() != null)
                 ? cfg.wrap()
                 : new LineWrapOptions(14, true));
-        
+
         List<String> pages = paginate(lines, cfg.maxLinesPerPage());
 
         return clampPages(pages);
