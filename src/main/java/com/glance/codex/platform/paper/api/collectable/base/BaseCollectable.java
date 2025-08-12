@@ -11,9 +11,11 @@ import com.glance.codex.platform.paper.item.ItemBuilder;
 import lombok.Data;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
@@ -47,7 +49,7 @@ public class BaseCollectable implements Collectable, Discoverable, ConfigSeriali
     private CommandEntry commandsOnReplay;
 
     @Override
-    public @NotNull String namespace() {
+    public @NotNull String key() {
         return key;
     }
 
@@ -69,8 +71,8 @@ public class BaseCollectable implements Collectable, Discoverable, ConfigSeriali
     }
 
     @Override
-    public @NotNull ItemStack icon() {
-        return ItemBuilder.fromConfig(iconEntry, null, CodexPlugin.getInstance().placeholderService()).build();
+    public @NotNull ItemStack icon(@Nullable OfflinePlayer player) {
+        return ItemBuilder.fromConfig(iconEntry, player, CodexPlugin.getInstance().placeholderService()).build();
     }
 
     @Override

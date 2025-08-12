@@ -7,11 +7,15 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
+
 public interface CollectableManager extends Manager {
 
     CollectableRepository loadFromConfig(RepositoryConfig<? extends Collectable> config);
 
     void registerRepository(CollectableRepository repo);
+
+    Collection<CollectableRepository> getRepositories();
 
     @Nullable Collectable get(@NotNull NamespacedKey key);
 

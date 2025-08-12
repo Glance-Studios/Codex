@@ -6,6 +6,7 @@ import com.glance.codex.platform.paper.config.model.LineWrapOptions;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -53,7 +54,7 @@ public class ItemBuilder {
      */
     public static ItemBuilder fromConfig(
             @NotNull ItemEntry entry,
-            @Nullable Player player,
+            @Nullable OfflinePlayer player,
             @Nullable PlaceholderService resolver
     ) {
         LineWrapOptions wrapOptions = (entry.getLineWrap() != null)

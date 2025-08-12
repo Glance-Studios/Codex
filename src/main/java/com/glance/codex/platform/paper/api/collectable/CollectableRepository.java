@@ -1,6 +1,8 @@
 package com.glance.codex.platform.paper.api.collectable;
 
 import org.bukkit.NamespacedKey;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,6 +14,14 @@ public interface CollectableRepository {
 
     @NotNull
     Map<String, Collectable> entries();
+
+    @NotNull
+    ItemStack getRepoIcon(@Nullable OfflinePlayer player);
+
+    @NotNull
+    default ItemStack getSelectedIcon(@Nullable OfflinePlayer player) {
+        return getRepoIcon(player);
+    }
 
     @Nullable Collectable get(@NotNull NamespacedKey key);
 

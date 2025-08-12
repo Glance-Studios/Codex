@@ -453,6 +453,8 @@ public final class ConfigController {
 
             // Deserialize config back into the field
             Object raw = section.get(path);
+            if (raw == null) continue;
+
             Object deserialized = converter.deserialize(raw);
 
             Object converted;

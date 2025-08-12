@@ -10,15 +10,17 @@ import com.glance.codex.utils.lifecycle.Manager;
 import com.google.auto.service.AutoService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.LinkedHashMap;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Singleton
 @AutoService(Manager.class)
 public class BaseCollectableManager implements CollectableManager {
@@ -36,12 +38,17 @@ public class BaseCollectableManager implements CollectableManager {
 
     @Override
     public CollectableRepository loadFromConfig(RepositoryConfig<? extends Collectable> config) {
-        return this.repositoryFactory.create(config.namespace(), new LinkedHashMap<>(config.entries()));
+        return this.repositoryFactory.create(config);
     }
 
     @Override
     public void registerRepository(CollectableRepository repo) {
         repositories.put(repo.namespace(), repo);
+    }
+
+    @Override
+    public Collection<CollectableRepository> getRepositories() {
+        return repositories.values();
     }
 
     @Override
