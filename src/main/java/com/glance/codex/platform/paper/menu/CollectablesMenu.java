@@ -3,7 +3,6 @@ package com.glance.codex.platform.paper.menu;
 import com.glance.codex.platform.paper.api.collectable.Collectable;
 import com.glance.codex.platform.paper.api.collectable.CollectableManager;
 import com.glance.codex.platform.paper.api.collectable.CollectableRepository;
-import com.glance.codex.platform.paper.api.collectable.base.BaseCollectable;
 import com.glance.codex.platform.paper.api.text.PlaceholderService;
 import com.glance.codex.platform.paper.config.model.ItemEntry;
 import com.glance.codex.platform.paper.item.ItemBuilder;
@@ -24,7 +23,6 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -93,7 +91,8 @@ public class CollectablesMenu {
         final List<Integer> slots = cfg.entrySlots().resolve(cfg.rows());
         if (slots.isEmpty()) return;
 
-        final List<Collectable> all = new ArrayList<>(repo.entries().values());
+        final Map<String, Collectable> all = repo.entries();
+        final List<Map.Entry<String, Collectable>> index = new ArrayList<>(all.entrySet());
         // todo any kind of sort available?
 
         final int perPage = slots.size();
@@ -104,8 +103,11 @@ public class CollectablesMenu {
 
         for (int i = start; i < end; i++) {
             final int slot = slots.get(i - start);
-            final Collectable c = all.get(i);
-            final NamespacedKey key = new NamespacedKey(repo.namespace(), c.key());
+            final Map.Entry<String, Collectable> e = index.get(i);
+            final String entryId = e.getKey();
+            final Collectable c  = e.getValue();
+
+            final NamespacedKey key = new NamespacedKey(repo.namespace(), entryId);
             final boolean unlocked = collectableManager.isUnlocked(player, key);
 
             // todo things based on unlocked or not

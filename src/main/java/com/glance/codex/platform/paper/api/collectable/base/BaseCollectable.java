@@ -17,13 +17,8 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
-
 @Data
 public class BaseCollectable implements Collectable, Discoverable, ConfigSerializable {
-
-    @ConfigField
-    private String key;
 
     @ConfigField String type;
 
@@ -49,16 +44,11 @@ public class BaseCollectable implements Collectable, Discoverable, ConfigSeriali
     private CommandEntry commandsOnReplay;
 
     @Override
-    public @NotNull String key() {
-        return key;
-    }
-
-    @Override
     public @NotNull Component displayName() {
         String resolved = CodexPlugin
                 .getInstance()
                 .placeholderService()
-                .apply(displayName, null, Map.of("collectable", key));
+                .apply(displayName, null);
         return MiniMessage.miniMessage().deserialize(resolved);
     }
 
@@ -67,7 +57,7 @@ public class BaseCollectable implements Collectable, Discoverable, ConfigSeriali
         return CodexPlugin
                 .getInstance()
                 .placeholderService()
-                .apply(displayName, null, Map.of("collectable", key));
+                .apply(displayName, null);
     }
 
     @Override

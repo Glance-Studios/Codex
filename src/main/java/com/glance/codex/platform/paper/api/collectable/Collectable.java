@@ -8,8 +8,6 @@ import org.jetbrains.annotations.Nullable;
 
 public interface Collectable {
 
-    @NotNull String key();
-
     @NotNull
     Component displayName();
 
