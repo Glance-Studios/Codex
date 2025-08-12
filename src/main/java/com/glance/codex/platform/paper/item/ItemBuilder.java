@@ -26,7 +26,7 @@ import java.util.stream.Stream;
  */
 public class ItemBuilder {
 
-    private static MiniMessage mm = MiniMessage.miniMessage();
+    private static final MiniMessage mm = MiniMessage.miniMessage();
 
     private final ItemStack item;
 
@@ -64,7 +64,7 @@ public class ItemBuilder {
 
         builder.item.editMeta(meta -> {
             String nameRaw = entry.getDisplayName();
-            List<String> loreRaw = entry.getLore();
+            List<String> loreRaw = (entry.getLore() == null) ? List.of() : entry.getLore();
 
             if (resolver != null) {
                 nameRaw = resolver.apply(nameRaw, player);

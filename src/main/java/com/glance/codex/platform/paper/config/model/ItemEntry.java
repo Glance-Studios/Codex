@@ -7,7 +7,6 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemFlag;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -21,20 +20,20 @@ public class ItemEntry implements ConfigSerializable {
     private String displayName = "";
 
     @ConfigField(order = 3)
-    private List<String> lore = new ArrayList<>();
+    private List<String> lore;
 
     @ConfigField(order = 4)
     private LoreMergeMode loreMergeMode;
 
     @ConfigField
-    private boolean glint = false;
+    private boolean glint;
 
     // sub 1.20.5
     @ConfigField
     private Integer customModelData;
 
     @ConfigField
-    private List<ItemFlag> flags = new ArrayList<>();
+    private List<ItemFlag> flags;
 
     // todo
     @ConfigField

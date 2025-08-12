@@ -11,29 +11,27 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Describes a set of GUI slot positions using various forms of a string expression,
+ * Describes a set of GUI slot positions using a compact string expression,
  * resolving into concrete slot indices for a given inventory height (rows)
- * <p>
- * Grammar (case-insensitive, comma-separated tokens)
- * </p>
+ *
+ * <p><b>Grammar</b> (case-insensitive, comma-separated tokens):</p>
  * <ul>
  *   <li><b>Single slot</b>: {@code 0}, {@code 5}, {@code 22}</li>
  *   <li><b>Range</b>: {@code 10-16}</li>
- *   <li><b>Row(s)</b>: {@code row:2} or {@code rows:2-3} (1-based rows)</li>
+ *   <li><b>Row(s)</b>: {@code row:2} or {@code rows:2-3} (1-based rows; also {@code row:last} / {@code row:-1})</li>
  *   <li><b>Column(s)</b>: {@code col:3} or {@code cols:1-2} (1-based columns)</li>
- *   <li><b>Specific cell</b>: {@code row:6 col:5} (1-based row/column)</li>
+ *   <li><b>Intersection</b>: {@code row:6 cols:3-7}, {@code rows:2-3 cols:2-8} (box/strip)</li>
+ *   <li><b>Specific cell</b>: {@code row:6 col:5} (handled as an intersection of one row & one col)</li>
  * </ul>
  *
- * <b>BitSet</b> used to dedupe slots efficiently and keep parsing order-agnostic</b>
- *
- * @author Cammy
+ * <p>Rows are clamped to 1..6. Output slots are de-duplicated and sorted</p>
  */
 @Getter
 @EqualsAndHashCode
 public final class SlotSpec {
 
-    /** Original expression as written in config */
-    private final String expr; // string expression of the slot spec
+    /** Original expression as written in config. */
+    private final String expr;
 
     private SlotSpec(@Nullable String expr) {
         this.expr = (expr == null) ? "" : expr.trim();
@@ -45,9 +43,6 @@ public final class SlotSpec {
 
     /**
      * Resolve this spec to concrete slot indices for a GUI with the given row count
-     * <p>
-     * Rows are clamped to {@code [1,6]} and the resulting slots are sorted, unique,
-     * and within {@code 0..rows*9-1}
      *
      * @param rows number of inventory rows (1..6)
      * @return list of slot indices suitable for Bukkit inventory APIs
@@ -57,18 +52,17 @@ public final class SlotSpec {
     }
 
     @Override
-    public String toString() { return expr; }
+    public String toString() {
+        return expr;
+    }
 
-    /*
-    * ===============
-    * Internal Parser
-    * ===============
-    */
+    // =================
+    // Internal parsing
+    // =================
 
     private static List<Integer> parse(@Nullable String spec, int rows) {
-        if (StringUtils.isNullOrBlank(spec)) return List.of(); assert spec != null;
+        if (spec == null || spec.isBlank()) return List.of();
 
-        // Clamp to valid GUI heights
         final int rowCount = Math.max(1, Math.min(6, rows));
         final int size = rowCount * 9;
 
@@ -77,20 +71,31 @@ public final class SlotSpec {
             String t = token.trim().toLowerCase(Locale.ROOT);
             if (t.isEmpty()) continue;
 
-            // Specific cell: "row:X col:Y"
-            if (t.contains("row:") && t.contains("col:")) {
-                int r = getIndexFromKey(t, "row:");
-                int c = getIndexFromKey(t, "col:");
-                int slot = rowColToSlot(r, c, size);
-                if (slot >= 0) bs.set(slot);
+            // Intersection first: "row:X cols:A-B" / "rows:X-Y cols:A-B" / "row:last col:5"
+            if (hasRowSel(t) && hasColSel(t)) {
+                int[] rowsSel = resolveRows(t, rowCount);
+                int[] colsSel = resolveCols(t);
+                for (int r : rowsSel) {
+                    for (int c : colsSel) {
+                        int slot = rowColToSlot(r, c, size);
+                        if (slot >= 0) bs.set(slot);
+                    }
+                }
                 continue;
             }
 
             // Full rows: "row:2" or "rows:2-3"
             if (t.startsWith("row:") || t.startsWith("rows:")) {
                 String range = t.substring(t.indexOf(':') + 1);
-                for (int r : parseRange(range)) {
-                    if (r < 1 || r > size / 9) continue;
+                int[] rowsSel;
+                if (t.startsWith("row:")) {
+                    int single = parseRowIndex(range, rowCount);
+                    rowsSel = (single >= 1 && single <= rowCount) ? new int[]{single} : new int[0];
+                } else {
+                    rowsSel = parseRange(range);
+                }
+                for (int r : rowsSel) {
+                    if (r < 1 || r > rowCount) continue;
                     int start = (r - 1) * 9;
                     bs.set(start, start + 9);
                 }
@@ -100,17 +105,19 @@ public final class SlotSpec {
             // Full columns: "col:3" or "cols:1-2"
             if (t.startsWith("col:") || t.startsWith("cols:")) {
                 String range = t.substring(t.indexOf(':') + 1);
-                for (int c : parseRange(range)) {
+                int[] colsSel = parseRange(range);
+                for (int c : colsSel) {
                     if (c < 1 || c > 9) continue;
                     int col = c - 1;
                     for (int r = 0; r < rowCount; r++) bs.set(r * 9 + col);
                 }
+                continue;
             }
 
-            // Numeric range "10-16" or single "5" etc
+            // Numeric slot range "10-16" or single "5"
             if (t.contains("-")) {
                 String[] ab = t.split("-", 2);
-                int a = parseInt(ab[0], 1), b = parseInt(ab[1], -1);
+                int a = parseInt(ab[0], -1), b = parseInt(ab[1], -1);
                 if (a >= 0 && b >= 0) {
                     int low = Math.min(a, b), high = Math.max(a, b);
                     for (int i = low; i <= high && i < size; i++) bs.set(i);
@@ -126,38 +133,72 @@ public final class SlotSpec {
         return out;
     }
 
+    // ----------------
+    // Token utilities
+    // ----------------
+
+    private static boolean hasRowSel(String t) {
+        return t.contains("row:") || t.contains("rows:");
+    }
+
+    private static boolean hasColSel(String t) {
+        return t.contains("col:") || t.contains("cols:");
+    }
+
+    private static String afterKey(String t, String key) {
+        int i = t.indexOf(key);
+        if (i < 0) return "";
+        int from = i + key.length();
+        int to = t.indexOf(' ', from);
+        return (to < 0) ? t.substring(from) : t.substring(from, to);
+    }
+
+    /** Supports {@code "last"} and {@code "-1"} as the final row */
+    private static int parseRowIndex(String raw, int rowCount) {
+        String s = raw.trim().toLowerCase(Locale.ROOT);
+        if (s.equals("last") || s.equals("-1")) return rowCount;
+        return parseInt(s, -1);
+    }
+
+    private static int[] resolveRows(String t, int rowCount) {
+        if (t.contains("row:")) {
+            int r = parseRowIndex(afterKey(t, "row:"), rowCount);
+            return (r >= 1 && r <= rowCount) ? new int[]{r} : new int[0];
+        }
+        if (t.contains("rows:")) {
+            int[] base = parseRange(afterKey(t, "rows:"));
+            List<Integer> filtered = new ArrayList<>();
+            for (int r : base) if (r >= 1 && r <= rowCount) filtered.add(r);
+            return filtered.stream().mapToInt(Integer::intValue).toArray();
+        }
+        return new int[0];
+    }
+
+    private static int[] resolveCols(String t) {
+        if (t.contains("col:")) {
+            int c = parseInt(afterKey(t, "col:"), -1);
+            return (c >= 1 && c <= 9) ? new int[]{c} : new int[0];
+        }
+        if (t.contains("cols:")) {
+            int[] base = parseRange(afterKey(t, "cols:"));
+            List<Integer> filtered = new ArrayList<>();
+            for (int c : base) if (c >= 1 && c <= 9) filtered.add(c);
+            return filtered.stream().mapToInt(Integer::intValue).toArray();
+        }
+        return new int[0];
+    }
+
+    // -------------
+    // Math helpers
+    // -------------
+
     private static int rowColToSlot(int row, int col, int size) {
         int rows = size / 9;
         if (row < 1 || row > rows || col < 1 || col > 9) return -1;
         return (row - 1) * 9 + (col - 1);
     }
 
-    /**
-     * Extract a single integer that follows a key within a token,
-     * e.g. {@code singleIndex("row:6 col:5", "row:") == 6}.
-     */
-    private static int getIndexFromKey(String t, String key) {
-        int idx = t.indexOf(key); if (idx < 0) return -1;
-        int from = idx + key.length();
-        int to = t.indexOf(' ', from);
-        String num = (to < 0) ? t.substring(from) : t.substring(from, to);
-        return parseInt(num, -1);
-    }
-
-    /** Parse an integer with a safe default */
-    private static int parseInt(String s, int def) {
-        try {
-            return Integer.parseInt(s.trim());
-        } catch (Exception e) {
-            return def;
-        }
-    }
-
-    /**
-     * Parse a {@code row}/{@code col} range like "2-4" or a single "3" into an int array
-     * <p>
-     * Values are not clamped here; validate according to context
-     */
+    /** Parse "a-b" or "n" into an int array (no clamping here) */
     private static int[] parseRange(String range) {
         String r = range.trim();
         if (r.contains("-")) {
@@ -165,7 +206,7 @@ public final class SlotSpec {
             int a = parseInt(ab[0], -1), b = parseInt(ab[1], -1);
             if (a < 0 || b < 0) return new int[0];
 
-            int low = Math.max(a, b), high = Math.max(a, b);
+            int low = Math.min(a, b), high = Math.max(a, b);
             int[] out = new int[high - low + 1];
             for (int i = 0, val = low; val <= high; val++, i++) out[i] = val;
             return out;
@@ -174,4 +215,11 @@ public final class SlotSpec {
         return (val < 0) ? new int[0] : new int[]{val};
     }
 
+    private static int parseInt(String s, int def) {
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (Exception e) {
+            return def;
+        }
+    }
 }
