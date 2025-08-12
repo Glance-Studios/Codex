@@ -109,10 +109,8 @@ public class CollectablesMenu {
 
             final NamespacedKey key = new NamespacedKey(repo.namespace(), entryId);
             final boolean unlocked = collectableManager.isUnlocked(player, key);
-
-            // todo things based on unlocked or not
-
-            GuiItem<Player, ItemStack> icon = dev.triumphteam.gui.paper.builder.item.ItemBuilder.from(c.icon(player))
+            final ItemStack iconItem = unlocked ? c.iconUnlocked(player) : c.iconLocked(player);
+            GuiItem<Player, ItemStack> icon = dev.triumphteam.gui.paper.builder.item.ItemBuilder.from(iconItem)
                     .asGuiItem((v, ctx) -> {
                         // TODO
                     });

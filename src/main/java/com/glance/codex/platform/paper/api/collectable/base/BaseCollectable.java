@@ -35,7 +35,10 @@ public class BaseCollectable implements Collectable, Discoverable, ConfigSeriali
     private boolean allowReplay;
 
     @ConfigField
-    private ItemEntry iconEntry;
+    private ItemEntry unlockedIcon;
+
+    @ConfigField
+    private ItemEntry lockedIcon;
 
     @ConfigField
     private CommandEntry commandsOnDiscover;
@@ -61,8 +64,13 @@ public class BaseCollectable implements Collectable, Discoverable, ConfigSeriali
     }
 
     @Override
-    public @NotNull ItemStack icon(@Nullable OfflinePlayer player) {
-        return ItemBuilder.fromConfig(iconEntry, player, CodexPlugin.getInstance().placeholderService()).build();
+    public @NotNull ItemStack iconUnlocked(@Nullable OfflinePlayer player) {
+        return ItemBuilder.fromConfig(unlockedIcon, player, CodexPlugin.getInstance().placeholderService()).build();
+    }
+
+    @Override
+    public @NotNull ItemStack iconLocked(@Nullable OfflinePlayer player) {
+        return ItemBuilder.fromConfig(lockedIcon, player, CodexPlugin.getInstance().placeholderService()).build();
     }
 
     @Override

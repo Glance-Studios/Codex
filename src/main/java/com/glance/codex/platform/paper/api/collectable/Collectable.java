@@ -14,7 +14,12 @@ public interface Collectable {
     @NotNull String rawDisplayName();
 
     @NotNull
-    ItemStack icon(@Nullable OfflinePlayer player);
+    ItemStack iconUnlocked(@Nullable OfflinePlayer player);
+
+    @NotNull
+    default ItemStack iconLocked(@Nullable OfflinePlayer player) {
+        return iconUnlocked(player);
+    }
 
     boolean showWhenLocked();
 
