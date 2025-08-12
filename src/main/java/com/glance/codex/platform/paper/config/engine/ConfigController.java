@@ -20,6 +20,8 @@ import com.glance.codex.platform.paper.config.engine.exception.ConfigSaveExcepti
 import com.glance.codex.platform.paper.config.engine.exception.ConfigValidationException;
 import com.glance.codex.platform.paper.config.engine.format.ConfigFormat;
 import com.glance.codex.platform.paper.config.engine.format.impl.YamlConfigFormat;
+import com.glance.codex.platform.paper.menu.config.codec.SlotSpec;
+import com.glance.codex.platform.paper.menu.config.codec.SlotSpecCodec;
 import com.glance.codex.utils.ReflectionUtils;
 import com.glance.codex.utils.data.TypeConverter;
 import com.glance.codex.utils.data.Validator;
@@ -91,6 +93,9 @@ public final class ConfigController {
             }
             return null;
         });
+
+        SlotSpecCodec slotCodec = new SlotSpecCodec();
+        CodecRegistry.register(SlotSpec.class, slotCodec);
     }
 
     /**
@@ -181,6 +186,8 @@ public final class ConfigController {
 
         configFiles.put(configClass, file);
         loadedSections.put(configClass, section);
+        INSTANCE_FILES.put(instance, file);
+        INSTANCE_SECTIONS.put(instance, section);
 
         boolean changed = syncFields(instance, section, true, meta.writeDefaults());
 
@@ -190,9 +197,6 @@ public final class ConfigController {
 
         // Call load event
         new ConfigLoadEvent(configClass, instance, changed);
-
-        INSTANCE_FILES.put(instance, file);
-        INSTANCE_SECTIONS.put(instance, section);
 
         return instance;
     }
@@ -320,7 +324,9 @@ public final class ConfigController {
         ConfigFormat formatHandler = formatHandlers.get(meta.format());
 
         if (file == null || section == null || formatHandler == null) {
-            throw new ConfigSaveException("Unable to save config for " + cls.getSimpleName());
+            throw new ConfigSaveException("Unable to save config for '" + cls.getSimpleName() +
+                    "' due to a null component -> File: " + file +  " | have section? " + (section == null) +
+                    " | formatHandler: " + formatHandler);
         }
 
         try {
@@ -374,6 +380,7 @@ public final class ConfigController {
         }
     }
 
+    // TODO: this should be cleaned up in a final config lib
     @SuppressWarnings("unchecked")
     private static boolean syncFields(
             Object instance,
@@ -401,7 +408,12 @@ public final class ConfigController {
             if (writeDefaults && cp.writeDefault() && !section.contains(path)) {
                 Object rawOut = converter.serialize(defaultValue);
 
-                if (rawOut instanceof ConfigSerializable cs) {
+                TypeCodec<Object> codec = (TypeCodec<Object>) CodecRegistry.find(fieldType);
+                if (codec != null) {
+                    rawOut = codec.encode(defaultValue);
+                    section.set(path, ConfigSerializable.toConfigCompatible(rawOut));
+                }
+                else if (rawOut instanceof ConfigSerializable cs) {
                     // bean field write:
                     Map<String, Object> serialized = cs.serialize();
                     for (var e : serialized.entrySet()) {

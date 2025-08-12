@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,8 +35,8 @@ public class BaseCollectableManager implements CollectableManager {
     }
 
     @Override
-    public CollectableRepository loadFromConfig(RepositoryConfig config) {
-        return this.repositoryFactory.create(config.namespace(), config.entries());
+    public CollectableRepository loadFromConfig(RepositoryConfig<? extends Collectable> config) {
+        return this.repositoryFactory.create(config.namespace(), new LinkedHashMap<>(config.entries()));
     }
 
     @Override

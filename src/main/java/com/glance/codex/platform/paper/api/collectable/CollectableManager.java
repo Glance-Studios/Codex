@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 public interface CollectableManager extends Manager {
 
-    CollectableRepository loadFromConfig(RepositoryConfig config);
+    CollectableRepository loadFromConfig(RepositoryConfig<? extends Collectable> config);
 
     void registerRepository(CollectableRepository repo);
 

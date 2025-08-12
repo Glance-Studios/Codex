@@ -5,9 +5,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-public interface RepositoryConfig {
+public interface RepositoryConfig<T extends Collectable> {
     boolean enabled();
     String namespace();
     @NotNull
-    Map<String, Collectable> entries();
+    Map<String, T> entries();
 }

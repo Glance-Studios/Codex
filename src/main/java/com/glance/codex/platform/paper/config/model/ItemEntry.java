@@ -66,4 +66,28 @@ public class ItemEntry implements ConfigSerializable {
         IGNORE_IF_PRESENT // Only set lore if none exists
     }
 
+    /*
+    * ==============
+    * Simple Builder
+    * ==============
+    */
+
+    /** Create a new ItemEntry with the given material */
+    public static @NotNull ItemEntry of(@NotNull Material material) {
+        ItemEntry e = new ItemEntry();
+        e.material = material;
+        return e;
+    }
+
+    /** Create a new ItemEntry with material and display name */
+    public static @NotNull ItemEntry of(@NotNull Material material, @NotNull String displayName) {
+        return of(material).name(displayName);
+    }
+
+    /** Chainable setter for display name (MiniMessage or legacy allowed) */
+    public @NotNull ItemEntry name(@NotNull String displayName) {
+        this.displayName = displayName;
+        return this;
+    }
+
 }

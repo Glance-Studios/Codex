@@ -1,6 +1,6 @@
 package com.glance.codex.platform.paper.collectable.config;
 
-import com.glance.codex.platform.paper.api.collectable.Collectable;
+import com.glance.codex.platform.paper.api.collectable.base.BaseCollectable;
 import com.glance.codex.platform.paper.api.collectable.config.RepositoryConfig;
 import com.glance.codex.platform.paper.config.engine.annotation.Config;
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigPath;
@@ -15,7 +15,7 @@ import java.util.Map;
 @Accessors(fluent = true)
 @Config(path = "collectables/*", writeDefaults = false)
 @AutoService(Config.Handler.class)
-public class CollectableRepositoryConfig implements Config.Contract, RepositoryConfig {
+public class CollectableRepositoryConfig implements Config.Contract, RepositoryConfig<BaseCollectable> {
 
     @ConfigPath("enabled")
     private boolean enabled;
@@ -33,6 +33,6 @@ public class CollectableRepositoryConfig implements Config.Contract, RepositoryC
     private boolean showWhenLocked = true;
 
     @ConfigPath("entries")
-    private Map<String, Collectable> entries = new LinkedHashMap<>();
+    private Map<String, BaseCollectable> entries = new LinkedHashMap<>();
 
 }

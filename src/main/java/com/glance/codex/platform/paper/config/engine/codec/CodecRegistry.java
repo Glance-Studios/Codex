@@ -4,6 +4,7 @@ import com.glance.codex.platform.paper.config.engine.codec.base.CollectionCodecs
 import com.glance.codex.platform.paper.config.engine.codec.base.StringMapCodec;
 import com.google.common.reflect.TypeToken;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,6 +25,7 @@ import java.util.*;
  *
  * @author Cammy
  */
+@Slf4j
 @UtilityClass
 public class CodecRegistry {
 
@@ -82,6 +84,7 @@ public class CodecRegistry {
         }
 
         // 5. Nothing matched
+        log.debug("Type: {} had no codec found", type.getTypeName());
         return null;
     }
 
