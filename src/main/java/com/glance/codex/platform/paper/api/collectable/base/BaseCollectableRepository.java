@@ -18,7 +18,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-// todo factory
 public class BaseCollectableRepository implements CollectableRepository {
 
     private final String namespace;

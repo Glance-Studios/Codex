@@ -1,6 +1,7 @@
 package com.glance.codex.platform.paper.config.engine.codec;
 
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,6 +16,7 @@ import java.util.regex.Pattern;
  *
  * @author Cammy
  */
+@Slf4j
 @UtilityClass
 public class ConfigInterpolator {
 
@@ -42,8 +44,8 @@ public class ConfigInterpolator {
                 if (def != null) {
                     val = def;
                 } else {
-                    throw new IllegalArgumentException(
-                            "Missing env variable or system property: " + name);
+                    log.warn("Missing env variable or system property: {} | Falling back to default", name);
+                    return input;
                 }
             }
 

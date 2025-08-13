@@ -41,6 +41,11 @@ dependencies {
 
     // PAPI
     compileOnly("me.clip:placeholderapi:2.11.6")
+
+    // Storage
+    implementation("org.jdbi:jdbi3-core:3.49.5")
+    implementation("org.jdbi:jdbi3-sqlobject:3.49.5")
+    implementation("com.zaxxer:HikariCP:5.1.0")
 }
 
 java {
@@ -70,7 +75,7 @@ tasks {
 configure<PaperPluginDescription> {
     name = "CollectablesCodex"
 
-    apiVersion = "1.20"
+    apiVersion = "1.21"
     version = "Git-${indraGit.commit()?.name?.take(7) ?: "unknown"}"
 
     main = "com.glance.codex.platform.paper.CodexPlugin"
