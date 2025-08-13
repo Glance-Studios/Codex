@@ -56,7 +56,7 @@ public class NoteBookRenderService implements Manager {
         if (meta == null) throw new IllegalStateException("BookMeta was null from " + book);
 
         Map<String, String> full = (player != null)
-                ? PlaceholderUtils.appendPlayerResolver(player, placeholders)
+                ? PlaceholderUtils.appendPlayerTags(player, placeholders)
                 : (placeholders != null ? new HashMap<>(placeholders) : Collections.emptyMap());
 
         String titleRaw = placeholderService.apply(safe(cfg.title()), player, full);

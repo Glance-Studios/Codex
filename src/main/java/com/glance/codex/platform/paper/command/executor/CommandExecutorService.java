@@ -67,7 +67,7 @@ public class CommandExecutorService implements Manager {
         @Nullable Map<String, String> placeholders
     ) {
         Map<String, String> full = (player != null)
-                ? PlaceholderUtils.appendPlayerResolver(player, placeholders)
+                ? PlaceholderUtils.appendPlayerTags(player, placeholders)
                 : (placeholders != null ? new HashMap<>(placeholders) : Collections.emptyMap());
 
         executeCommand(null, command, player, full);
@@ -93,7 +93,7 @@ public class CommandExecutorService implements Manager {
             @NotNull Player player,
             @Nullable Map<String, String> placeholders
     ) {
-        Map<String, String> full = PlaceholderUtils.appendPlayerResolver(player, placeholders);
+        Map<String, String> full = PlaceholderUtils.appendPlayerTags(player, placeholders);
         executeCommand(CommandLine.Target.PLAYER, command, player, full);
     }
 

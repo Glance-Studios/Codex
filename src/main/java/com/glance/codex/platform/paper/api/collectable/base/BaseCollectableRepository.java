@@ -24,18 +24,15 @@ public class BaseCollectableRepository implements CollectableRepository {
     private final ItemEntry icon;
     private final ItemEntry selectedIcon;
     private final Map<String, Collectable> entries;
-    private final CommandExecutorService commandExecutor;
     private final PlaceholderService resolver;
 
     @Inject
     public BaseCollectableRepository(
         @Assisted final RepositoryConfig<?> cfg,
-        @NotNull final CommandExecutorService commandExecutor,
         @NotNull final PlaceholderService resolver
     ) {
         this.namespace = cfg.namespace();
         this.entries = new LinkedHashMap<>(cfg.entries());
-        this.commandExecutor = commandExecutor;
         this.resolver = resolver;
         this.icon = cfg.icon();
         this.selectedIcon = cfg.selectedIcon();
@@ -63,10 +60,8 @@ public class BaseCollectableRepository implements CollectableRepository {
 
     @Override
     public @Nullable Collectable get(@NotNull NamespacedKey key) {
-        return null;
+        if (!namespace.equals(key.namespace())) return null;
+        return entries.get(key.getKey());
     }
-
-    // todo unlock/replay here? To trigger the executor?
-
 
 }

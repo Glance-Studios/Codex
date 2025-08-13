@@ -8,6 +8,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 public interface CollectableManager extends Manager {
 
@@ -17,10 +19,14 @@ public interface CollectableManager extends Manager {
 
     Collection<CollectableRepository> getRepositories();
 
+    @Nullable CollectableRepository getRepo(@NotNull String namespace);
+
     @Nullable Collectable get(@NotNull NamespacedKey key);
 
-    boolean unlock(@NotNull Player player, NamespacedKey key);
+    CompletableFuture<Boolean> unlock(@NotNull Player player, NamespacedKey key);
 
-    boolean isUnlocked(@NotNull Player player, NamespacedKey key);
+    CompletableFuture<Boolean> isUnlocked(@NotNull Player player, NamespacedKey key);
+
+    CompletableFuture<Set<String>> unlockedIds(@NotNull Player player, @NotNull String namespace);
 
 }
