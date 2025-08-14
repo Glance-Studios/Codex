@@ -125,7 +125,7 @@ public class ItemBuilder {
         List<String> result = new ArrayList<>();
 
         for (String line : rawLore) {
-            if (opts.maxLineLength() == Integer.MAX_VALUE) {
+            if (opts.maxLineLength() == Integer.MAX_VALUE || opts.maxLineLength() < 0) {
                 result.add(line);
                 continue;
             }
