@@ -1,3 +1,4 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import net.minecrell.pluginyml.paper.PaperPluginDescription
 import xyz.jpenilla.runpaper.task.RunServer
 
@@ -46,15 +47,34 @@ dependencies {
     implementation("org.jdbi:jdbi3-core:3.49.5")
     implementation("org.jdbi:jdbi3-sqlobject:3.49.5")
     implementation("com.zaxxer:HikariCP:5.1.0")
+    compileOnly("org.xerial:sqlite-jdbc:3.46.0.1")
 }
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
+// Setup SQLite Build
+val sqlite: Configuration by configurations.creating
+dependencies { sqlite("org.xerial:sqlite-jdbc:3.46.0.1") }
+
+val shadowWithSQLite by tasks.registering(ShadowJar::class) {
+    group = "build"
+    archiveClassifier.set("with-sqlite")
+    from(sourceSets.main.get().output)
+    configurations = listOf(project.configurations.runtimeClasspath.get(), sqlite)
+    minimize()
+}
+
 tasks {
     build {
         dependsOn(shadowJar)
+    }
+
+    shadowJar {
+        archiveClassifier.set("")
+        minimize()
+        dependencies { exclude(dependency("org.xerial:sqlite-jdbc")) }
     }
 
     runServer {
@@ -66,10 +86,16 @@ tasks {
         options.encoding = Charsets.UTF_8.name()
         options.compilerArgs = listOf("-parameters")
     }
+}
 
-    withType<RunServer> {
-        systemProperty("com.mojang.eula.agree", "true")
-    }
+tasks.named<RunServer>("runServer") {
+//    dependsOn("shadowWithSQLite")
+//
+//    pluginJars.setFrom(emptyList<Any>())
+//    pluginJars.setFrom(
+//        shadowWithSQLite.flatMap { it.archiveFile }
+//    )
+    systemProperty("com.mojang.eula.agree", "true")
 }
 
 configure<PaperPluginDescription> {

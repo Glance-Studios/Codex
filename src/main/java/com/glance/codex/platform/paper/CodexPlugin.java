@@ -2,8 +2,10 @@ package com.glance.codex.platform.paper;
 
 import com.glance.codex.platform.paper.api.text.PlaceholderService;
 import com.glance.codex.platform.paper.config.engine.ConfigController;
+import com.glance.codex.platform.paper.config.engine.codec.ConfigInterpolator;
 import com.glance.codex.platform.paper.inject.CodexModule;
 import com.glance.codex.platform.paper.inject.PaperComponentScanner;
+import com.glance.codex.platform.paper.text.PluginPlaceholderSource;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import lombok.Getter;
@@ -24,6 +26,7 @@ public class CodexPlugin extends JavaPlugin {
         this.injector = Guice.createInjector(new CodexModule(this));
         getLogger().setLevel(Level.FINE);
 
+        ConfigInterpolator.registerSource(new PluginPlaceholderSource(this));
         ConfigController.init();
     }
 

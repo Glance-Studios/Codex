@@ -95,7 +95,7 @@ public class CollectablesMenu {
 
         final List<CollectableRepository> repos = new ArrayList<>(collectableManager.getRepositories());
         if (repos.isEmpty()) {
-            Gui.of(rows).title(MM.deserialize("<red>No collections configured>")).build().open(player);
+            Gui.of(rows).title(MM.deserialize("<red>No collections configured")).build().open(player);
             return;
         }
 

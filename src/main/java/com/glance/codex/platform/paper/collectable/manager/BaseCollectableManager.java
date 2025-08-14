@@ -8,12 +8,12 @@ import com.glance.codex.platform.paper.api.collectable.base.BaseCollectable;
 import com.glance.codex.platform.paper.api.collectable.config.RepositoryConfig;
 import com.glance.codex.platform.paper.api.collectable.base.factory.BaseCollectableRepoFactory;
 import com.glance.codex.platform.paper.api.data.storage.CollectableStorage;
-import com.glance.codex.platform.paper.api.text.PlaceholderService;
 import com.glance.codex.platform.paper.command.executor.CommandExecutorService;
 import com.glance.codex.platform.paper.text.PlaceholderUtils;
 import com.glance.codex.utils.lifecycle.Manager;
 import com.google.auto.service.AutoService;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import org.bukkit.NamespacedKey;
@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BaseCollectableManager implements CollectableManager {
 
     private final Plugin plugin;
-    private final CollectableStorage storage;
+    private final Provider<CollectableStorage> storageProvider;
     private final CommandExecutorService commandExecutor;
     private final BaseCollectableRepoFactory repositoryFactory;
 
@@ -44,14 +44,20 @@ public class BaseCollectableManager implements CollectableManager {
     @Inject
     public BaseCollectableManager(
         @NotNull final Plugin plugin,
-        @NotNull final CollectableStorage storage,
+        @NotNull final Provider<CollectableStorage> storage,
         @NotNull final CommandExecutorService commandExecutor,
         @NotNull final BaseCollectableRepoFactory repositoryFactory
     ) {
         this.plugin = plugin;
-        this.storage = storage;
+        this.storageProvider = storage;
         this.commandExecutor = commandExecutor;
         this.repositoryFactory = repositoryFactory;
+    }
+
+    @Override
+    public void onEnable() {
+        // initialize storage instance
+        this.storageProvider.get();
     }
 
     @Override
@@ -82,6 +88,7 @@ public class BaseCollectableManager implements CollectableManager {
 
     @Override
     public CompletableFuture<Boolean> unlock(@NotNull Player player, NamespacedKey key) {
+        var storage = storageProvider.get();
         Collectable collectable = get(key);
         if (collectable == null) return CompletableFuture.completedFuture(false);
 
@@ -128,12 +135,12 @@ public class BaseCollectableManager implements CollectableManager {
 
     @Override
     public CompletableFuture<Boolean> isUnlocked(@NotNull Player player, NamespacedKey key) {
-        return storage.isUnlocked(player.getUniqueId(), key.getNamespace(), key.getKey());
+        return storageProvider.get().isUnlocked(player.getUniqueId(), key.getNamespace(), key.getKey());
     }
 
     @Override
     public CompletableFuture<Set<String>> unlockedIds(@NotNull Player player, @NotNull String namespace) {
-        return storage.loadUnlockedIds(player.getUniqueId(), namespace);
+        return storageProvider.get().loadUnlockedIds(player.getUniqueId(), namespace);
     }
 
 }

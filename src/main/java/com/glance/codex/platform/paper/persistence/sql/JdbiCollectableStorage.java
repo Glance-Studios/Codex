@@ -2,6 +2,7 @@ package com.glance.codex.platform.paper.persistence.sql;
 
 import com.glance.codex.platform.paper.api.data.PlayerCollectables;
 import com.glance.codex.platform.paper.api.data.storage.CollectableStorage;
+import com.glance.codex.platform.paper.persistence.config.SqlBootstrap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.bukkit.plugin.Plugin;

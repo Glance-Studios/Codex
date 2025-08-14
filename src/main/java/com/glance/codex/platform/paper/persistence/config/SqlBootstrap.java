@@ -1,6 +1,6 @@
-package com.glance.codex.platform.paper.persistence.sql;
+package com.glance.codex.platform.paper.persistence.config;
 
-import com.glance.codex.platform.paper.persistence.CollectableStorageConfig;
+import com.glance.codex.platform.paper.persistence.sql.SqliteCollectableDao;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.zaxxer.hikari.HikariConfig;
@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.bukkit.plugin.Plugin;
 import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import javax.sql.DataSource;
@@ -16,7 +17,7 @@ import javax.sql.DataSource;
 @Singleton
 @Getter
 @Accessors(fluent = true)
-public class SqlBootstrap {
+public final class SqlBootstrap {
 
     private final DataSource dataSource;
     private final Jdbi jdbi;
@@ -42,7 +43,10 @@ public class SqlBootstrap {
 
         this.dataSource = new HikariDataSource(hc);
 
-        this.jdbi = Jdbi.create(this.dataSource).installPlugins();
+        this.jdbi = Jdbi.create(this.dataSource)
+                .installPlugins()
+                .installPlugin(new SqlObjectPlugin());
+
         this.dialect = url.startsWith("jdbc:sqlite") ? Dialect.SQLITE : Dialect.MYSQL;
 
         // Create schema once

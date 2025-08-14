@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
@@ -63,6 +64,10 @@ public class ConfigDiscovery {
         final Path base = baseDir.toPath().normalize();
         final String normalized = pattern.replace('\\', '/');
 
+        if (!Files.exists(base)) {
+            return Collections.emptyList();
+        }
+
         if (!containsGlob(normalized)) {
             return tryDirectFiles(base, normalized, exts, eagerExtensionName);
         }
@@ -71,8 +76,11 @@ public class ConfigDiscovery {
         final Path walkBase = split.walkBase;
         final String tail = split.tail;
 
-        final int maxDepth = computeDepth(tail, recursiveDepth);
+        if (!Files.exists(walkBase)) {
+            return Collections.emptyList();
+        }
 
+        final int maxDepth = computeDepth(tail, recursiveDepth);
         final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + tail);
 
         try (Stream<Path> walk = Files.walk(walkBase, maxDepth)) {
@@ -84,7 +92,7 @@ public class ConfigDiscovery {
                     .map(Path::toFile)
                     .toList();
         } catch (IOException e) {
-            throw new RuntimeException("Failed discovering files under" + walkBase + " for pattern" + pattern, e);
+            throw new RuntimeException("Failed discovering files under: '" + walkBase + "' for pattern: '" + pattern + "'", e);
         }
     }
 

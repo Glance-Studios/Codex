@@ -12,8 +12,6 @@ import com.glance.codex.platform.paper.command.engine.argument.TypedArgParser;
 import com.glance.codex.platform.paper.config.engine.ConfigController;
 import com.glance.codex.platform.paper.config.engine.annotation.Config;
 import com.glance.codex.platform.paper.notebooks.config.NoteBookConfig;
-import com.glance.codex.platform.paper.config.model.BookConfig;
-import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
 import com.glance.codex.platform.paper.collectable.type.CollectableTypeRegistry;
 import com.glance.codex.platform.paper.notebooks.config.NoteBookConfigLoader;
 import com.glance.codex.utils.lifecycle.Manager;
@@ -25,9 +23,7 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,11 +47,11 @@ public class PaperComponentScanner {
     @SuppressWarnings("unchecked")
     public void scanAndInitialize(@NotNull final Plugin plugin, @NotNull Injector injector) {
         Logger logger = plugin.getLogger();
-        logger.info("[AutoScan] Starting auto component scan for " + plugin.getName());
+        logger.fine("[GuiceScan] Starting auto component scan for " + plugin.getName());
 
         ClassLoader classLoader = plugin.getClass().getClassLoader();
 
-        // Config Loading
+        // Configs Load First
         for (Class<? extends Config.Handler> clazz : GuiceServiceLoader.load(Config.Handler.class, classLoader)) {
             try {
                 if (Config.Contract.class.isAssignableFrom(clazz)) continue;
@@ -65,7 +61,7 @@ public class PaperComponentScanner {
                 @SuppressWarnings("unchecked")
                 Class<Config.Handler> typedClass = (Class<Config.Handler>) clazz;
                 ConfigController.loadConfig(plugin, typedClass, config);
-                logger.fine("[AutoScan] Loaded Config Bean: " + clazz.getName());
+                logger.fine("[GuiceScan] Loaded Config Bean: " + clazz.getName());
             } catch (Exception e) {
                 logError(logger, "load config", clazz, e);
             }
@@ -79,7 +75,7 @@ public class PaperComponentScanner {
             try {
                 Manager manager = injector.getInstance(clazz);
                 manager.onEnable();
-                logger.fine("[AutoScan] Enabled Manager: " + clazz.getName());
+                logger.fine("[GuiceScan] Enabled Manager: " + clazz.getName());
             } catch (Exception e) {
                 logError(logger, "enable Manager", clazz, e);
             }
@@ -92,7 +88,7 @@ public class PaperComponentScanner {
                 try {
                     CollectableType type = injector.getInstance(clazz);
                     collectableTypeRegistry.register(type);
-                    logger.fine("[AutoScan] CollectableType Registered: " + clazz.getName());
+                    logger.fine("[GuiceScan] CollectableType Registered: " + clazz.getName());
                 } catch (Exception e) {
                     logError(logger, "registering CollectableType", clazz, e);
                 }
@@ -145,7 +141,7 @@ public class PaperComponentScanner {
             try {
                 Listener listener = injector.getInstance(clazz);
                 plugin.getServer().getPluginManager().registerEvents(listener, plugin);
-                logger.fine("[AutoScan] Registered Listener: " + clazz.getName());
+                logger.fine("[GuiceScan] Registered Listener: " + clazz.getName());
             } catch (Exception e) {
                 logError(logger, "register Listener", clazz, e);
             }
@@ -160,7 +156,7 @@ public class PaperComponentScanner {
             logger.log(Level.SEVERE, "[AutoScan] Failed to initialize a Command Lifecycle element!", e);
         }
 
-        logger.info("[AutoScan] Completed component scan for " + plugin.getName());
+        logger.fine("[GuiceScan] Completed component scan for " + plugin.getName());
     }
 
     @SuppressWarnings("all")
@@ -221,17 +217,17 @@ public class PaperComponentScanner {
             try {
                 Manager manager = injector.getInstance(clazz);
                 manager.onDisable();
-                logger.fine("[AutoScan] Disabling Manager: " + clazz.getName());
+                logger.fine("[GuiceScan] Disabling Manager: " + clazz.getName());
             } catch (Exception e) {
                 logError(logger, "disabling Manager", clazz, e);
             }
         }
 
-        logger.info("[AutoScan] Completed component cleanup for " + plugin.getName());
+        logger.info("[GuiceScan] Completed component cleanup for " + plugin.getName());
     }
 
     private static void logError(Logger log, String context, Class<?> clazz, Exception e) {
-        log.log(Level.SEVERE, "[AutoScan] Failed to " + context + ": " + clazz.getName(), e);
+        log.log(Level.SEVERE, "[GuiceScan] Failed to " + context + ": " + clazz.getName(), e);
     }
 
 }
