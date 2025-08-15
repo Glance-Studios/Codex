@@ -76,7 +76,6 @@ public class BaseNotebookRegistry implements Manager, NotebookRegistry {
     @Override
     public boolean open(@NotNull NamespacedKey id, @NotNull Player player) {
         BookConfig cfg = this.get(id).orElse(null);
-        log.warn("Did we get a config from key {} | {}", id, cfg);
         if (cfg == null || !cfg.enabled()) return false;
 
         showToPlayer(cfg, player, null);
@@ -89,8 +88,6 @@ public class BaseNotebookRegistry implements Manager, NotebookRegistry {
             @Nullable Map<String, String> placeholders
     ) {
         ItemStack book = renderService.buildWrittenBook(cfg, player, placeholders);
-
-        log.info("About to show {} book: {}", player.getName(), book);
         plugin.getServer().getScheduler().runTask(plugin, () -> player.openBook(book));
     }
 

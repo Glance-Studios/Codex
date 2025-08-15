@@ -1,16 +1,14 @@
 package com.glance.codex.platform.paper.config.engine;
 
 import com.glance.codex.platform.paper.CodexPlugin;
+import com.glance.codex.platform.paper.api.collectable.Collectable;
 import com.glance.codex.platform.paper.config.engine.annotation.Config;
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigField;
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigPath;
 import com.glance.codex.platform.paper.config.engine.codec.CodecRegistry;
 import com.glance.codex.platform.paper.config.engine.codec.ConfigSerializable;
 import com.glance.codex.platform.paper.config.engine.codec.TypeCodec;
-import com.glance.codex.platform.paper.config.engine.codec.base.BukkitCodec;
-import com.glance.codex.platform.paper.config.engine.codec.base.ConfigSerializableCodec;
-import com.glance.codex.platform.paper.config.engine.codec.base.EnumCodec;
-import com.glance.codex.platform.paper.config.engine.codec.base.PrimitiveCodecs;
+import com.glance.codex.platform.paper.config.engine.codec.base.*;
 import com.glance.codex.platform.paper.config.engine.event.ConfigLoadEvent;
 import com.glance.codex.platform.paper.config.engine.event.ConfigPushEvent;
 import com.glance.codex.platform.paper.config.engine.event.ConfigReloadEvent;
@@ -27,14 +25,18 @@ import com.glance.codex.utils.data.TypeConverter;
 import com.glance.codex.utils.data.Validator;
 import com.glance.codex.utils.io.FileUtils;
 import com.google.inject.Injector;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.logging.Level;
@@ -94,8 +96,8 @@ public final class ConfigController {
             return null;
         });
 
-        SlotSpecCodec slotCodec = new SlotSpecCodec();
-        CodecRegistry.register(SlotSpec.class, slotCodec);
+        CodecRegistry.register(SlotSpec.class, new SlotSpecCodec());
+        CodecRegistry.register(ConfigurationSection.class, new SectionCodec());
     }
 
     /**
@@ -447,44 +449,99 @@ public final class ConfigController {
 
                 changed = true;
             }
+        }
 
-            // Skip reading into fields if we're in write-only mode
-            if (!readIntoFields) continue;
-
-            // Deserialize config back into the field
-            Object raw = section.get(path);
-            if (raw == null) continue;
-
-            Object deserialized = converter.deserialize(raw);
-
-            Object converted;
-            if (deserialized != null) {
-                converted = deserialized;
-            } else {
-                TypeCodec<Object> codec = (TypeCodec<Object>) CodecRegistry.find(fieldType);
-                converted = (codec != null)
-                        ? codec.decode(section, path, fieldType, defaultValue)
-                        : defaultValue;
-            }
-
-            Validator<Object> validator = (Validator<Object>) ReflectionUtils.instantiate(cp.validator());
-            try {
-                Optional<String> err = validator.validate(converted);
-                if (err.isPresent()) {
-                    throw new ConfigValidationException(err.get());
-                }
-            } catch (Exception e) {
-                throw new ConfigValidationException(
-                        "Validation failed for '" + path +
-                                "' in " + cls.getSimpleName() + ": " + e.getMessage()
-                );
-            }
-
-            // inject
-            ReflectionUtils.setFieldValue(field, instance, converted);
+        if (readIntoFields) {
+            populate(instance, section, null, false);
         }
 
         return changed;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> void populate(
+        final @NotNull T instance,
+        final @NotNull ConfigurationSection section,
+        @Nullable TypeCodec<? extends T> codec,
+        boolean debug
+    ) {
+        final Class<?> cls = instance.getClass();
+
+        for (Field field : allConfigFields(cls)) {
+            final ConfigPath pathAnn = field.getAnnotation(ConfigPath.class);
+            final ConfigField fieldAnn = field.getAnnotation(ConfigField.class);
+            if (pathAnn == null && fieldAnn == null) continue;
+
+            field.setAccessible(true);
+
+            final String path = (pathAnn != null)
+                    ? pathAnn.value()
+                    : field.getName();
+            if (!section.contains(path)) continue;
+
+            final T currentValue = (T) ReflectionUtils.getFieldValue(field, instance);
+            final Type fieldType = field.getGenericType();
+
+            final Object raw = section.get(path);
+            if (raw == null) continue;
+
+            TypeCodec<? extends T> typeCodec = codec;
+            if (typeCodec == null) {
+                final TypeCodec<?> reg = CodecRegistry.find(fieldType);
+                if (reg != null) typeCodec = (TypeCodec<? extends T>) reg;
+            }
+
+            T converted;
+            if (typeCodec != null) {
+                converted = decodeWith(typeCodec, section, path, fieldType, currentValue);
+            } else if (pathAnn != null) {
+                final TypeConverter<T> converter =
+                        (TypeConverter<T>) ReflectionUtils.instantiate(pathAnn.converter());
+                final T deserialized = converter.deserialize(raw);
+                converted = (deserialized != null) ? deserialized : currentValue;
+            } else {
+                converted = currentValue;
+            }
+
+            // Validate (@ConfigPath only)
+            if (pathAnn != null) {
+                final Validator<Object> validator =
+                        (Validator<Object>) ReflectionUtils.instantiate(pathAnn.validator());
+                final Optional<String> err = validator.validate(converted);
+                if (err.isPresent()) {
+                    throw new ConfigValidationException(
+                        "Validation failed for '" + path +
+                        "' in " + cls.getSimpleName() + ": " + err.get());
+                }
+            }
+
+            ReflectionUtils.setFieldValue(field, instance, converted);
+        }
+    }
+
+    private static List<Field> allConfigFields(Class<?> cls) {
+        List<Field> out = new ArrayList<>();
+        for (Class<?> c = cls; c != null && c != Object.class; c = c.getSuperclass()) {
+             for (Field f : c.getDeclaredFields()) {
+                 if (f.isSynthetic() || Modifier.isStatic(f.getModifiers())) continue;
+                 if (f.getAnnotation(ConfigPath.class) != null || f.getAnnotation(ConfigField.class) != null) {
+                     out.add(f);
+                 }
+             }
+        }
+        return out;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <X> X decodeWith(
+        @NonNull final TypeCodec<? extends X> codec,
+        final ConfigurationSection section,
+        final String path,
+        final Type fieldType,
+        final X defaultValue
+    ) {
+        TypeCodec<X> cast = (TypeCodec<X>) codec;
+        return cast.decode(section, path, fieldType, defaultValue);
     }
 
     /**
@@ -506,6 +563,13 @@ public final class ConfigController {
      */
     public static Optional<File> getConfigFile(Config.Handler instance) {
         return Optional.ofNullable(INSTANCE_FILES.get(instance));
+    }
+
+    /**
+     * Returns an Optional of a loaded File for the given config instance
+     */
+    public static Optional<ConfigurationSection> getConfigSection(Config.Handler instance) {
+        return Optional.ofNullable(INSTANCE_SECTIONS.get(instance));
     }
 
     /**

@@ -26,6 +26,4 @@ public class NoteCollectableType implements CollectableType {
         return new ConfigSerializableCodec<>(NoteCollectable.class);
     }
 
-    // todo do we want anything else generalized here
-
 }

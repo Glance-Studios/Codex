@@ -2,6 +2,7 @@ package com.glance.codex.platform.paper.api.collectable.base;
 
 import com.glance.codex.platform.paper.CodexPlugin;
 import com.glance.codex.platform.paper.api.collectable.Collectable;
+import com.glance.codex.platform.paper.api.collectable.CollectableMeta;
 import com.glance.codex.platform.paper.api.collectable.Discoverable;
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigField;
 import com.glance.codex.platform.paper.config.engine.codec.ConfigSerializable;
@@ -20,31 +21,34 @@ import org.jetbrains.annotations.Nullable;
 @Data
 public class BaseCollectable implements Collectable, Discoverable, ConfigSerializable {
 
-    @ConfigField String type;
+    protected CollectableMeta meta;
 
     @ConfigField
-    private String displayName;
+    protected String type;
 
     @ConfigField
-    private String rawDisplayName;
+    protected String displayName;
 
     @ConfigField
-    private boolean showWhenLocked;
+    protected String rawDisplayName;
 
     @ConfigField
-    private boolean allowReplay;
+    protected boolean showWhenLocked;
 
     @ConfigField
-    private ItemEntry unlockedIcon;
+    protected boolean allowReplay;
 
     @ConfigField
-    private ItemEntry lockedIcon;
+    protected ItemEntry unlockedIcon;
 
     @ConfigField
-    private CommandEntry commandsOnDiscover;
+    protected ItemEntry lockedIcon;
 
     @ConfigField
-    private CommandEntry commandsOnReplay;
+    protected CommandEntry commandsOnDiscover;
+
+    @ConfigField
+    protected CommandEntry commandsOnReplay;
 
     @Override
     public @NotNull Component displayName() {
@@ -81,6 +85,16 @@ public class BaseCollectable implements Collectable, Discoverable, ConfigSeriali
     @Override
     public boolean allowReplay() {
         return allowReplay;
+    }
+
+    @Override
+    public void setMeta(@NotNull CollectableMeta meta) {
+        this.meta = meta;
+    }
+
+    @Override
+    public @Nullable CollectableMeta getMeta() {
+        return this.meta;
     }
 
     @Override

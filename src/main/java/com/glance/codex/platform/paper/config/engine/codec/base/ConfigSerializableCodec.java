@@ -22,7 +22,7 @@ import java.lang.reflect.Type;
  * @author Cammy
  */
 @Slf4j
-public class ConfigSerializableCodec<T extends ConfigSerializable> implements TypeCodec<T> {
+public final class ConfigSerializableCodec<T extends ConfigSerializable> implements TypeCodec<T> {
 
     private final Class<T> clazz;
 

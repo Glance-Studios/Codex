@@ -1,6 +1,5 @@
 package com.glance.codex.platform.paper.collectable.config;
 
-import com.glance.codex.platform.paper.api.collectable.base.BaseCollectable;
 import com.glance.codex.platform.paper.api.collectable.config.RepositoryConfig;
 import com.glance.codex.platform.paper.config.engine.annotation.Config;
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigPath;
@@ -9,15 +8,13 @@ import com.google.auto.service.AutoService;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.bukkit.Material;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
+import org.bukkit.configuration.ConfigurationSection;
 
 @Data
 @Accessors(fluent = true)
 @Config(path = "collectables/*", writeDefaults = false)
 @AutoService(Config.Handler.class)
-public class CollectableRepositoryConfig implements Config.Contract, RepositoryConfig<BaseCollectable> {
+public class CollectableRepositoryConfig implements Config.Contract, RepositoryConfig {
 
     @ConfigPath("enabled")
     private boolean enabled = true;
@@ -41,6 +38,6 @@ public class CollectableRepositoryConfig implements Config.Contract, RepositoryC
     private boolean showWhenLocked = true;
 
     @ConfigPath("entries")
-    private Map<String, BaseCollectable> entries = new LinkedHashMap<>();
+    private ConfigurationSection rawEntries;
 
 }

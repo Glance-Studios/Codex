@@ -17,7 +17,7 @@ import java.util.Map;
  *
  * @author Cammy
  */
-public class StringMapCodec<V> implements TypeCodec<Map<String, V>> {
+public final class StringMapCodec<V> implements TypeCodec<Map<String, V>> {
 
     private final TypeCodec<V> valueCodec;
 

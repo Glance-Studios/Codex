@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 
 public interface CollectableManager extends Manager {
 
-    CollectableRepository loadFromConfig(RepositoryConfig<? extends Collectable> config);
+    void loadFromConfig(RepositoryConfig config);
 
     void registerRepository(CollectableRepository repo);
 

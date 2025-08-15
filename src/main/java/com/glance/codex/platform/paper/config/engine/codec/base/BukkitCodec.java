@@ -13,7 +13,7 @@ import java.lang.reflect.Type;
  *
  * @param <T> the Bukkit serializable type
  */
-public class BukkitCodec<T extends ConfigurationSerializable> implements TypeCodec<T> {
+public final class BukkitCodec<T extends ConfigurationSerializable> implements TypeCodec<T> {
 
     private final Class<T> clazz;
 

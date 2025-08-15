@@ -18,6 +18,7 @@ import com.glance.codex.utils.lifecycle.Manager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import lombok.experimental.UtilityClass;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
@@ -109,8 +110,7 @@ public class PaperComponentScanner {
 
                     for (CollectableRepositoryConfig cfg : repoConfigs) {
                         if (!cfg.enabled()) continue;
-                        CollectableRepository repo = collectableManager.loadFromConfig(cfg);
-                        collectableManager.registerRepository(repo);
+                        collectableManager.loadFromConfig(cfg);
                     }
                 } catch (Exception e) {
                     logError(logger, "load collectable config", clazz, e);

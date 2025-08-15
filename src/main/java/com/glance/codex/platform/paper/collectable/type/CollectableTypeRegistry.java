@@ -7,10 +7,7 @@ import com.google.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 @Singleton
 @AutoService(Manager.class)
@@ -22,8 +19,16 @@ public class CollectableTypeRegistry implements Manager {
         types.put(type.id().toLowerCase(Locale.ROOT), type);
     }
 
-    public @Nullable CollectableType get(@NotNull String id) {
-        return types.get(id.toLowerCase(Locale.ROOT));
+    public Optional<CollectableType> get(@NotNull String id) {
+        return Optional.ofNullable(types.get(id.toLowerCase(Locale.ROOT)));
+    }
+
+    public Optional<CollectableType> getOr(@NotNull String id, @NotNull String base) {
+        var getFirst = types.get(id.toLowerCase(Locale.ROOT));
+        if (getFirst == null) {
+            return Optional.ofNullable(types.get(base.toLowerCase(Locale.ROOT)));
+        }
+        return Optional.of(getFirst);
     }
 
     public Collection<CollectableType> all() {

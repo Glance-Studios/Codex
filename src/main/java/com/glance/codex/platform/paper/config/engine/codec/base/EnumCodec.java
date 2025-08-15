@@ -18,7 +18,7 @@ import java.lang.reflect.Type;
  *
  * @author Cammy
  */
-public class EnumCodec implements TypeCodec<Enum<?>> {
+public final class EnumCodec implements TypeCodec<Enum<?>> {
 
     @Override
     public @Nullable Enum<?> decode(ConfigurationSection section, String path, Type type, @Nullable Enum<?> defaultValue) {

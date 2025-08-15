@@ -1,11 +1,13 @@
 package com.glance.codex.platform.paper.notebooks.config;
 
+import com.glance.codex.platform.paper.CodexPlugin;
 import com.glance.codex.platform.paper.config.model.BookConfig;
 import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
 import com.glance.codex.utils.format.StringUtils;
 import com.google.inject.Injector;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
@@ -89,7 +91,9 @@ public class NoteBookConfigLoader {
 
             for (var entry : toRegister.entrySet()) {
                 registry.register(namespace, entry.getKey(), entry.getValue());
-                log.info("Registered note: {}:{} from {}", namespace, entry.getKey(), path.getFileName());
+                CodexPlugin.getInstance().getLogger().info(
+                    "Registered Note: " + namespace + ":" + entry.getKey() + " from " + path.getFileName()
+                );
             }
         }
     }

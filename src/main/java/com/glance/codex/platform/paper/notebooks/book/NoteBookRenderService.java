@@ -61,7 +61,6 @@ public class NoteBookRenderService implements Manager {
 
         String titleRaw = placeholderService.apply(safe(cfg.title()), player, full);
         String authorRaw = placeholderService.apply(safe(cfg.author()), player, full);
-        log.warn("Got title and author: {} | {}", titleRaw, authorRaw);
 
         meta.setTitle(titleRaw);
         meta.author(MM.deserialize(authorRaw));
@@ -88,32 +87,61 @@ public class NoteBookRenderService implements Manager {
             for (String p : pagesExplicit) {
                 out.add(placeholderService.apply(safe(p), player, placeholders));
             }
+            return clampPages(out);
         }
 
         String content = placeholderService.apply(safe(cfg.content()), player, placeholders);
         List<String> lines = wrap(content, (cfg.wrap() != null)
                 ? cfg.wrap()
-                : new LineWrapOptions(14, true));
+                : new LineWrapOptions(DEFAULT_WRAP_WIDTH, true),
+                cfg.collapseBlankLines());
 
-        List<String> pages = paginate(lines, cfg.maxLinesPerPage());
+        List<String> pages = paginate(lines, Math.max(1, cfg.maxLinesPerPage()));
 
         return clampPages(pages);
     }
 
-    private List<String> wrap(String content, @NotNull LineWrapOptions opts) {
-        final int width = opts.maxLineLength();
+    private List<String> wrap(String content, @NotNull LineWrapOptions opts, boolean collapseBlank) {
+        final int width = Math.max(1, opts.maxLineLength());
         final String normalized = normalizeNewlines(content);
 
         List<String> out = new ArrayList<>();
         String[] paragraphs = normalized.split("\n", -1);
 
-        return Arrays.stream(paragraphs).toList();
+        for (String para : paragraphs) {
+            if (collapseBlank && para.isBlank()) {
+                // collapse consecutive blanks to a single blank line
+                if (out.isEmpty() || out.getLast().isBlank()) continue;
+                out.add("");
+                continue;
+            }
+            if (para.isEmpty()) { out.add(""); continue; }
+
+            // simple word wrap
+            String[] words = para.split("\\s+");
+            StringBuilder line = new StringBuilder();
+            for (String w : words) {
+                if (line.isEmpty()) {
+                    line.append(w);
+                } else if (line.length() + 1 + w.length() <= width) {
+                    line.append(' ').append(w);
+                } else {
+                    out.add(line.toString());
+                    line.setLength(0);
+                    line.append(w);
+                }
+            }
+            if (!line.isEmpty()) out.add(line.toString());
+        }
+
+        return out;
     }
 
     private List<String> paginate(List<String> lines, int maxLinesPerPage) {
         List<String> pages = new ArrayList<>();
         if (lines.isEmpty()) return pages;
 
+        int max = Math.max(1, maxLinesPerPage);
         StringBuilder page = new StringBuilder();
         int count = 0;
 
@@ -121,7 +149,7 @@ public class NoteBookRenderService implements Manager {
             if (count == 0) page.append(l);
             else page.append('\n').append(l);
 
-            if (++count >= maxLinesPerPage) {
+            if (++count >= max) {
                 pages.add(page.toString());
                 page.setLength(0);
                 count = 0;

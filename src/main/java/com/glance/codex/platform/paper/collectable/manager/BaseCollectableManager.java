@@ -1,33 +1,34 @@
 package com.glance.codex.platform.paper.collectable.manager;
 
-import com.glance.codex.platform.paper.api.collectable.Collectable;
-import com.glance.codex.platform.paper.api.collectable.CollectableManager;
-import com.glance.codex.platform.paper.api.collectable.CollectableRepository;
-import com.glance.codex.platform.paper.api.collectable.Discoverable;
+import com.glance.codex.platform.paper.api.collectable.*;
 import com.glance.codex.platform.paper.api.collectable.base.BaseCollectable;
 import com.glance.codex.platform.paper.api.collectable.config.RepositoryConfig;
 import com.glance.codex.platform.paper.api.collectable.base.factory.BaseCollectableRepoFactory;
 import com.glance.codex.platform.paper.api.data.storage.CollectableStorage;
+import com.glance.codex.platform.paper.collectable.config.EntryParser;
+import com.glance.codex.platform.paper.collectable.type.CollectableTypeRegistry;
 import com.glance.codex.platform.paper.command.executor.CommandExecutorService;
+import com.glance.codex.platform.paper.config.engine.ConfigController;
 import com.glance.codex.platform.paper.text.PlaceholderUtils;
 import com.glance.codex.utils.lifecycle.Manager;
 import com.google.auto.service.AutoService;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 
 @Slf4j
 @Singleton
@@ -35,21 +36,27 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BaseCollectableManager implements CollectableManager {
 
     private final Plugin plugin;
+    private final Injector injector;
     private final Provider<CollectableStorage> storageProvider;
     private final CommandExecutorService commandExecutor;
     private final BaseCollectableRepoFactory repositoryFactory;
+    private final CollectableTypeRegistry typeRegistry;
 
     private final Map<String, CollectableRepository> repositories = new ConcurrentHashMap<>();
 
     @Inject
     public BaseCollectableManager(
         @NotNull final Plugin plugin,
+        @NotNull final Injector injector,
         @NotNull final Provider<CollectableStorage> storage,
+        @NotNull final CollectableTypeRegistry typeRegistry,
         @NotNull final CommandExecutorService commandExecutor,
         @NotNull final BaseCollectableRepoFactory repositoryFactory
     ) {
         this.plugin = plugin;
+        this.injector = injector;
         this.storageProvider = storage;
+        this.typeRegistry = typeRegistry;
         this.commandExecutor = commandExecutor;
         this.repositoryFactory = repositoryFactory;
     }
@@ -61,8 +68,41 @@ public class BaseCollectableManager implements CollectableManager {
     }
 
     @Override
-    public CollectableRepository loadFromConfig(RepositoryConfig<? extends Collectable> config) {
-        return this.repositoryFactory.create(config);
+    public void loadFromConfig(@NotNull RepositoryConfig config) {
+        if (!config.enabled()) return;
+
+        Map<String, Collectable> entries;
+        CollectableRepository repository;
+
+        ConfigurationSection entriesSection = config.rawEntries();
+
+        if (entriesSection == null) {
+            entries = Map.of();
+        } else {
+            BiFunction<Collectable, ConfigurationSection, Boolean> binder = (inst, section) -> {
+                ConfigController.populate(inst, section, null, true);
+                return true;
+            };
+
+            entries = EntryParser.parseAndPopulate(
+                    entriesSection,
+                    EntryParser.getFactory(typeRegistry, "type"),
+                    binder,
+                    injector
+            );
+        }
+
+        plugin.getLogger().info(
+            "Registered Repository: '" + config.namespace() + "' with "
+                    + entries.size() + " entries"
+        );
+
+        repository = this.repositoryFactory.create(config, entries);
+
+        entries.forEach((entryId, c) ->
+                c.setMeta(new CollectableMeta(config.namespace(), entryId, repository)));
+
+        registerRepository(repository);
     }
 
     @Override
@@ -91,6 +131,7 @@ public class BaseCollectableManager implements CollectableManager {
         var storage = storageProvider.get();
         Collectable collectable = get(key);
         if (collectable == null) return CompletableFuture.completedFuture(false);
+        log.debug("Have Collectable here: {} is {}", collectable, collectable.getClass());
 
         final UUID uuid = player.getUniqueId();
         final String ns = key.namespace();

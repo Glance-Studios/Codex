@@ -38,23 +38,23 @@ public class CollectableStorageProvider implements Provider<CollectableStorage> 
 
         var backend = cfg.backend();
         if (backend == CollectableStorageConfig.Backend.FLATFILE) {
-            plugin.getLogger().info("[Collectables] Using FlatFile storage (JSON)");
+            plugin.getLogger().info("Using FlatFile storage (JSON)");
             return cached = flat.get();
         }
 
         if (backend == CollectableStorageConfig.Backend.SQLITE) {
             if (!classPresent("org.sqlite.JDBC")) {
-                plugin.getLogger().warning("[Collectables] SQLite driver missing. Falling back to FlatFile.");
+                plugin.getLogger().warning("SQLite driver missing. Falling back to FlatFile.");
                 return cached = flat.get();
             }
         } else if (backend == CollectableStorageConfig.Backend.MYSQL) {
             if (!classPresent("com.mysql.cj.jdbc.Driver")) {
-                plugin.getLogger().warning("[Collectables] MySQL driver missing. Falling back to FlatFile.");
+                plugin.getLogger().warning("MySQL driver missing. Falling back to FlatFile.");
                 return cached = flat.get();
             }
         }
 
-        plugin.getLogger().info("[Collectables] Using SQL storage via JDBI (" + backend + ").");
+        plugin.getLogger().info("Using SQL storage via JDBI (" + backend + ").");
         return cached = sql.get();
     }
 

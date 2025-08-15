@@ -25,4 +25,9 @@ public interface Collectable {
 
     boolean allowReplay();
 
+    void setMeta(@NotNull CollectableMeta meta);
+
+    @Nullable
+    CollectableMeta getMeta();
+
 }
