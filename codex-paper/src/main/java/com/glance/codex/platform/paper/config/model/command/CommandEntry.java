@@ -1,8 +1,10 @@
 package com.glance.codex.platform.paper.config.model.command;
 
+import com.glance.codex.api.collectable.config.model.command.CommandConfig;
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigField;
 import com.glance.codex.platform.paper.config.engine.codec.ConfigSerializable;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.util.*;
 
@@ -14,7 +16,7 @@ import java.util.*;
  * <p>
  * This class supports:
  * <ul>
- *     <li>Per-command execution mode via {@link CommandLine#getRunAs()}</li>
+ *     <li>Per-command execution mode via {@link CommandLine#runAs()}</li>
  *     <li>Global forced execution as console or player</li>
  *     <li>Placeholder substitution</li>
  * </ul>
@@ -31,7 +33,8 @@ import java.util.*;
  * @author Cammy
  */
 @Data
-public class CommandEntry implements ConfigSerializable {
+@Accessors(fluent = true)
+public class CommandEntry implements ConfigSerializable, CommandConfig<CommandLine> {
 
     /**
      * Whether this command entry is enabled

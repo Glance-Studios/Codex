@@ -1,6 +1,6 @@
 package com.glance.codex.platform.paper.collectable.type;
 
-import com.glance.codex.platform.paper.api.collectable.type.CollectableType;
+import com.glance.codex.api.collectable.type.CollectableType;
 import com.glance.codex.utils.lifecycle.Manager;
 import com.google.auto.service.AutoService;
 import com.google.inject.Singleton;

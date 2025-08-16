@@ -1,6 +1,6 @@
 package com.glance.codex.platform.paper.collectable.type.note;
 
-import com.glance.codex.platform.paper.api.collectable.base.BaseCollectable;
+import com.glance.codex.platform.paper.collectable.BaseCollectable;
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigField;
 import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
 import com.google.inject.Inject;

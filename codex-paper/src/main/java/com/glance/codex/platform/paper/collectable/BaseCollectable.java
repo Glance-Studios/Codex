@@ -1,25 +1,25 @@
 package com.glance.codex.platform.paper.collectable;
 
+import com.glance.codex.api.collectable.base.PlayerCollectable;
 import com.glance.codex.platform.paper.CodexPlugin;
-import com.glance.codex.api.collectable.Collectable;
 import com.glance.codex.api.collectable.CollectableMeta;
-import com.glance.codex.api.collectable.Discoverable;
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigField;
 import com.glance.codex.platform.paper.config.engine.codec.ConfigSerializable;
 import com.glance.codex.platform.paper.config.model.ItemEntry;
 import com.glance.codex.platform.paper.config.model.command.CommandEntry;
 import com.glance.codex.platform.paper.item.ItemBuilder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@Data
-public class BaseCollectable implements Collectable, Discoverable, ConfigSerializable {
+@Getter
+@Accessors(fluent = true)
+public class BaseCollectable extends PlayerCollectable implements ConfigSerializable {
 
     protected CollectableMeta meta;
 
@@ -49,6 +49,20 @@ public class BaseCollectable implements Collectable, Discoverable, ConfigSeriali
 
     @ConfigField
     protected CommandEntry commandsOnReplay;
+
+    @ConfigField
+    protected String playerMessageOnDiscover;
+
+    @ConfigField
+    protected String playerMessageOnReplay;
+
+    @ConfigField
+    protected String globalMessageOnDiscover;
+
+    @ConfigField
+    protected String globalMessageOnReplay;
+
+    // todo placeholder service should be injectable
 
     @Override
     public @NotNull Component displayName() {
@@ -95,16 +109,6 @@ public class BaseCollectable implements Collectable, Discoverable, ConfigSeriali
     @Override
     public @Nullable CollectableMeta getMeta() {
         return this.meta;
-    }
-
-    @Override
-    public void onDiscover(@NotNull Player player) {
-        // default no-op
-    }
-
-    @Override
-    public void onReplay(@NotNull Player player) {
-        // default no-op
     }
 
 }

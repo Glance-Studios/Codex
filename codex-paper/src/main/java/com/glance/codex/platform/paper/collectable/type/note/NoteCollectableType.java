@@ -1,9 +1,9 @@
 package com.glance.codex.platform.paper.collectable.type.note;
 
-import com.glance.codex.platform.paper.api.collectable.Collectable;
-import com.glance.codex.platform.paper.api.collectable.type.CollectableType;
-import com.glance.codex.platform.paper.config.engine.codec.TypeCodec;
+import com.glance.codex.api.collectable.Collectable;
+import com.glance.codex.api.collectable.type.CollectableType;
 import com.glance.codex.platform.paper.config.engine.codec.base.ConfigSerializableCodec;
+import com.glance.codex.utils.data.TypeCodec;
 import com.google.auto.service.AutoService;
 import org.jetbrains.annotations.NotNull;
 

@@ -2,6 +2,7 @@ package com.glance.codex.platform.paper.config.engine.codec;
 
 import com.glance.codex.platform.paper.config.engine.codec.base.CollectionCodecs;
 import com.glance.codex.platform.paper.config.engine.codec.base.StringMapCodec;
+import com.glance.codex.utils.data.TypeCodec;
 import com.google.common.reflect.TypeToken;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;

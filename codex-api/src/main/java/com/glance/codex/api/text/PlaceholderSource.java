@@ -1,4 +1,4 @@
-package com.glance.codex.platform.paper.text;
+package com.glance.codex.api.text;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

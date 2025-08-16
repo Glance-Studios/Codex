@@ -1,6 +1,6 @@
 package com.glance.codex.platform.paper.config.engine.codec;
 
-import com.glance.codex.platform.paper.text.PlaceholderSource;
+import com.glance.codex.api.text.PlaceholderSource;
 import com.glance.codex.platform.paper.text.PluginPlaceholderSource;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;

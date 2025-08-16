@@ -1,13 +1,11 @@
 package com.glance.codex.platform.paper.config.engine;
 
 import com.glance.codex.platform.paper.CodexPlugin;
-import com.glance.codex.platform.paper.api.collectable.Collectable;
 import com.glance.codex.platform.paper.config.engine.annotation.Config;
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigField;
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigPath;
 import com.glance.codex.platform.paper.config.engine.codec.CodecRegistry;
 import com.glance.codex.platform.paper.config.engine.codec.ConfigSerializable;
-import com.glance.codex.platform.paper.config.engine.codec.TypeCodec;
 import com.glance.codex.platform.paper.config.engine.codec.base.*;
 import com.glance.codex.platform.paper.config.engine.event.ConfigLoadEvent;
 import com.glance.codex.platform.paper.config.engine.event.ConfigPushEvent;
@@ -20,10 +18,11 @@ import com.glance.codex.platform.paper.config.engine.format.ConfigFormat;
 import com.glance.codex.platform.paper.config.engine.format.impl.YamlConfigFormat;
 import com.glance.codex.platform.paper.menu.config.codec.SlotSpec;
 import com.glance.codex.platform.paper.menu.config.codec.SlotSpecCodec;
-import com.glance.codex.utils.ReflectionUtils;
+import com.glance.codex.utils.data.TypeCodec;
 import com.glance.codex.utils.data.TypeConverter;
 import com.glance.codex.utils.data.Validator;
 import com.glance.codex.utils.io.FileUtils;
+import com.glance.codex.utils.lifecycle.ReflectionUtils;
 import com.google.inject.Injector;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;

@@ -1,11 +1,13 @@
 package com.glance.codex.platform.paper.inject;
 
-import com.glance.codex.platform.paper.api.collectable.CollectableManager;
-import com.glance.codex.platform.paper.api.collectable.CollectableRepository;
-import com.glance.codex.platform.paper.api.collectable.base.BaseCollectableRepository;
-import com.glance.codex.platform.paper.api.collectable.base.factory.BaseCollectableRepoFactory;
+import com.glance.codex.api.collectable.CollectableAPI;
+import com.glance.codex.api.collectable.CollectableManager;
+import com.glance.codex.api.collectable.CollectableRepository;
 import com.glance.codex.api.data.storage.CollectableStorage;
-import com.glance.codex.platform.paper.api.text.PlaceholderService;
+import com.glance.codex.api.text.PlaceholderService;
+import com.glance.codex.platform.paper.collectable.BaseCollectableRepository;
+import com.glance.codex.platform.paper.collectable.CollectableApiImpl;
+import com.glance.codex.platform.paper.collectable.factory.BaseCollectableRepoFactory;
 import com.glance.codex.platform.paper.collectable.manager.BaseCollectableManager;
 import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
 import com.glance.codex.platform.paper.notebooks.book.BaseNotebookRegistry;
@@ -50,6 +52,8 @@ public class CodexModule extends AbstractModule {
         this.install(new FactoryModuleBuilder()
                 .implement(CollectableRepository.class, BaseCollectableRepository.class)
                 .build(BaseCollectableRepoFactory.class));
+
+        this.bind(CollectableAPI.class).to(CollectableApiImpl.class).asEagerSingleton();
     }
 
     private boolean isPapiPresent() {

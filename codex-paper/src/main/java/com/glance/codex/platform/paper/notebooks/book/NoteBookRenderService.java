@@ -1,6 +1,6 @@
 package com.glance.codex.platform.paper.notebooks.book;
 
-import com.glance.codex.platform.paper.api.text.PlaceholderService;
+import com.glance.codex.api.text.PlaceholderService;
 import com.glance.codex.platform.paper.config.model.BookConfig;
 import com.glance.codex.platform.paper.config.model.LineWrapOptions;
 import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
@@ -29,21 +29,15 @@ public class NoteBookRenderService implements Manager {
 
     private final MiniMessage MM = MiniMessage.miniMessage();
     private final PlaceholderService placeholderService;
-    private final NotebookRegistry registry;
-    private final Plugin plugin;
 
     private final int DEFAULT_WRAP_WIDTH = 24;
     private final int MAX_BOOK_PAGES = 100;
 
     @Inject
     public NoteBookRenderService(
-            @NotNull Plugin plugin,
-            @NotNull PlaceholderService placeholderService,
-            @NotNull NotebookRegistry registry
-            ) {
-        this.plugin = plugin;
+            @NotNull PlaceholderService placeholderService
+    ) {
         this.placeholderService = placeholderService;
-        this.registry = registry;
     }
 
     public ItemStack buildWrittenBook(

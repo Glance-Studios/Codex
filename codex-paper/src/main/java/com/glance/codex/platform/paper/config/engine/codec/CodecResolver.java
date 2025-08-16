@@ -1,5 +1,6 @@
 package com.glance.codex.platform.paper.config.engine.codec;
 
+import com.glance.codex.utils.data.TypeCodec;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;

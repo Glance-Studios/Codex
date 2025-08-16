@@ -1,7 +1,7 @@
 package com.glance.codex.platform.paper.text;
 
-import com.glance.codex.platform.paper.api.collectable.Collectable;
-import com.glance.codex.platform.paper.api.collectable.CollectableRepository;
+import com.glance.codex.api.collectable.Collectable;
+import com.glance.codex.api.collectable.CollectableRepository;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
@@ -34,10 +34,8 @@ public class PlaceholderUtils {
      *  </ul>
      */
     public @NotNull Map<String, String> appendCollectableTags(
-        @NotNull OfflinePlayer player,
         @NotNull NamespacedKey key,
         @NotNull Collectable collectable,
-        @NotNull CollectableRepository repo,
         @Nullable Map<String, String> placeholders
     ) {
         Map<String, String> map = new HashMap<>();

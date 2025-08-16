@@ -1,6 +1,6 @@
 package com.glance.codex.platform.paper.persistence.file;
 
-import com.glance.codex.platform.paper.api.data.PlayerCollectables;
+import com.glance.codex.api.data.PlayerCollectables;
 import com.glance.codex.api.data.storage.CollectableStorage;
 import com.glance.codex.platform.paper.persistence.config.CollectableStorageConfig;
 import com.google.gson.Gson;

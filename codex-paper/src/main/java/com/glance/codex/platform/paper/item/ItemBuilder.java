@@ -1,8 +1,10 @@
 package com.glance.codex.platform.paper.item;
 
+import com.glance.codex.api.collectable.config.model.ItemConfig;
+import com.glance.codex.api.collectable.config.model.LineWrapConfig;
 import com.glance.codex.api.text.PlaceholderService;
 import com.glance.codex.platform.paper.config.model.ItemEntry;
-import com.glance.codex.platform.paper.config.model.LineWrapOptions;
+import com.glance.codex.utils.item.LoreMergeMode;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
@@ -52,19 +54,19 @@ public class ItemBuilder {
      * @return the configured item builder
      */
     public static ItemBuilder fromConfig(
-            @NotNull ItemEntry entry,
+            @NotNull ItemConfig entry,
             @Nullable OfflinePlayer player,
             @Nullable PlaceholderService resolver
     ) {
-        LineWrapOptions wrapOptions = (entry.getLineWrap() != null)
-                ? entry.getLineWrap()
-                : LineWrapOptions.DISABLED;
+        LineWrapConfig wrapOptions = (entry.lineWrap() != null)
+                ? entry.lineWrap()
+                : new LineWrapConfig(){};
 
-        ItemBuilder builder = of(entry.getMaterial());
+        ItemBuilder builder = of(entry.material());
 
         builder.item.editMeta(meta -> {
-            String nameRaw = entry.getDisplayName();
-            List<String> loreRaw = (entry.getLore() == null) ? List.of() : entry.getLore();
+            String nameRaw = entry.rawDisplayName();
+            List<String> loreRaw = (entry.lore() == null) ? List.of() : entry.lore();
 
             if (resolver != null) {
                 nameRaw = resolver.apply(nameRaw, player);
@@ -78,16 +80,16 @@ public class ItemBuilder {
                     .toList();
 
             meta.displayName(nameComponent);
-            applyLore(meta, loreComponents, entry.mergeMode());
+            applyLore(meta, loreComponents, entry.loreMergeMode());
 
-            if (entry.getFlags() != null) entry.getFlags().forEach(meta::addItemFlags);
+            if (entry.flags() != null) entry.flags().forEach(meta::addItemFlags);
 
             // todo check version for this
-            if (entry.getCustomModelData() != null && getModelDataMode(meta) == ModelDataMode.INTEGER) {
-                meta.setCustomModelData(entry.getCustomModelData());
+            if (entry.customModelData() != null && getModelDataMode(meta) == ModelDataMode.INTEGER) {
+                meta.setCustomModelData(entry.customModelData());
             }
 
-            if (entry.isGlint()) {
+            if (entry.glint()) {
                 @NotNull Enchantment fake = (builder.item.getType() == Material.BOW)
                         ? Enchantment.AQUA_AFFINITY
                         : Enchantment.INFINITY;
@@ -105,22 +107,23 @@ public class ItemBuilder {
     private static void applyLore(
             @NotNull ItemMeta meta,
             @NotNull List<Component> newLore,
-            @NotNull ItemEntry.LoreMergeMode mode
+            @Nullable LoreMergeMode mode
     ) {
         List<Component> existing = meta.lore() != null ? meta.lore() : List.of();
         if (existing == null) existing = List.of();
 
         List<Component> merged = switch (mode) {
-            case ItemEntry.LoreMergeMode.REPLACE -> newLore;
-            case ItemEntry.LoreMergeMode.APPEND -> Stream.concat(existing.stream(), newLore.stream()).toList();
-            case ItemEntry.LoreMergeMode.PREPEND -> Stream.concat(newLore.stream(), existing.stream()).toList();
-            case ItemEntry.LoreMergeMode.IGNORE_IF_PRESENT -> existing.isEmpty() ? newLore : existing;
+            case null -> newLore;
+            case LoreMergeMode.REPLACE -> newLore;
+            case LoreMergeMode.APPEND -> Stream.concat(existing.stream(), newLore.stream()).toList();
+            case LoreMergeMode.PREPEND -> Stream.concat(newLore.stream(), existing.stream()).toList();
+            case LoreMergeMode.IGNORE_IF_PRESENT -> existing.isEmpty() ? newLore : existing;
         };
 
         meta.lore(merged);
     }
 
-    private static List<String> wrapLoreLines(@NotNull List<String> rawLore, @NotNull LineWrapOptions opts) {
+    private static List<String> wrapLoreLines(@NotNull List<String> rawLore, @NotNull LineWrapConfig opts) {
         List<String> result = new ArrayList<>();
 
         for (String line : rawLore) {

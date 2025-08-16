@@ -1,6 +1,6 @@
 package com.glance.codex.platform.paper.config.engine.codec.base;
 
-import com.glance.codex.platform.paper.config.engine.codec.TypeCodec;
+import com.glance.codex.utils.data.TypeCodec;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.jetbrains.annotations.NotNull;

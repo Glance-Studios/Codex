@@ -2,7 +2,7 @@ package com.glance.codex.platform.paper.config.engine.codec.base;
 
 import com.glance.codex.platform.paper.config.engine.codec.CodecRegistry;
 import com.glance.codex.platform.paper.config.engine.codec.ConfigInterpolator;
-import com.glance.codex.platform.paper.config.engine.codec.TypeCodec;
+import com.glance.codex.utils.data.TypeCodec;
 import lombok.experimental.UtilityClass;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.ApiStatus;

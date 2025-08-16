@@ -1,11 +1,12 @@
 package com.glance.codex.platform.paper.collectable.manager;
 
-import com.glance.codex.platform.paper.api.collectable.*;
-import com.glance.codex.platform.paper.api.collectable.base.BaseCollectable;
-import com.glance.codex.platform.paper.api.collectable.config.RepositoryConfig;
-import com.glance.codex.platform.paper.api.collectable.base.factory.BaseCollectableRepoFactory;
+import com.glance.codex.api.collectable.*;
+import com.glance.codex.api.collectable.base.PlayerCollectable;
+import com.glance.codex.api.collectable.config.RepositoryConfig;
 import com.glance.codex.api.data.storage.CollectableStorage;
+import com.glance.codex.api.text.PlaceholderService;
 import com.glance.codex.platform.paper.collectable.config.EntryParser;
+import com.glance.codex.platform.paper.collectable.factory.BaseCollectableRepoFactory;
 import com.glance.codex.platform.paper.collectable.type.CollectableTypeRegistry;
 import com.glance.codex.platform.paper.command.executor.CommandExecutorService;
 import com.glance.codex.platform.paper.config.engine.ConfigController;
@@ -17,6 +18,8 @@ import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -40,6 +43,8 @@ public class BaseCollectableManager implements CollectableManager {
     private final CommandExecutorService commandExecutor;
     private final BaseCollectableRepoFactory repositoryFactory;
     private final CollectableTypeRegistry typeRegistry;
+    private final PlaceholderService placeholderService;
+    private final MiniMessage mm = MiniMessage.miniMessage();
 
     private final Map<String, CollectableRepository> repositories = new ConcurrentHashMap<>();
 
@@ -49,6 +54,7 @@ public class BaseCollectableManager implements CollectableManager {
         @NotNull final Injector injector,
         @NotNull final Provider<CollectableStorage> storage,
         @NotNull final CollectableTypeRegistry typeRegistry,
+        @NotNull final PlaceholderService placeholderService,
         @NotNull final CommandExecutorService commandExecutor,
         @NotNull final BaseCollectableRepoFactory repositoryFactory
     ) {
@@ -58,6 +64,7 @@ public class BaseCollectableManager implements CollectableManager {
         this.typeRegistry = typeRegistry;
         this.commandExecutor = commandExecutor;
         this.repositoryFactory = repositoryFactory;
+        this.placeholderService = placeholderService;
     }
 
     @Override
@@ -137,31 +144,37 @@ public class BaseCollectableManager implements CollectableManager {
         final String id = key.getKey();
         final CollectableRepository repo = repositories.get(ns);
 
+        var placeholderBuild = PlaceholderUtils.appendCollectableTags(
+                key, collectable, null);
+        placeholderBuild = PlaceholderUtils.appendPlayerTags(player, placeholderBuild);
+        final Map<String, String> placeholders = placeholderBuild;
+
         return storage.isUnlocked(uuid, ns, id).thenCompose(unlocked -> {
             if (unlocked) {
+                // Replay
                 if (!collectable.allowReplay()) return CompletableFuture.completedFuture(false);
                 long now = System.currentTimeMillis();
                 return storage.recordReplay(uuid, ns, id, now).thenApply(v -> {
                     if (collectable instanceof Discoverable d) d.onReplay(player);
-                    if (collectable instanceof BaseCollectable bc && bc.getCommandsOnReplay() != null) {
-                        Map<String, String> placeholders = PlaceholderUtils.appendCollectableTags(
-                           player, key, collectable, repo, null);
-                        placeholders = PlaceholderUtils.appendPlayerTags(player, placeholders);
 
-                        this.commandExecutor.execute(bc.getCommandsOnReplay(), player, placeholders);
+                    if (collectable instanceof PlayerCollectable pc && pc.commandsOnReplay() != null) {
+                        this.commandExecutor.execute(pc.commandsOnReplay(), player, placeholders);
+                        sendGlobalMessage(player, pc.globalMessageOnReplay(), placeholders);
+                        sendPlayerMessage(player, pc.playerMessageOnReplay(), placeholders);
                     }
                     return true;
                 });
             } else {
+                // First unlock
                 long now = System.currentTimeMillis();
                 return storage.putUnlock(uuid, ns, id, now).thenApply(inserted -> {
                    if (!inserted) return false;
                    if (collectable instanceof Discoverable d) d.onDiscover(player);
-                   if (collectable instanceof BaseCollectable bc && bc.getCommandsOnDiscover() != null) {
-                       Map<String, String> placeholders = PlaceholderUtils.appendCollectableTags(
-                               player, key, collectable, repo, null);
-                       placeholders = PlaceholderUtils.appendPlayerTags(player, placeholders);
-                       commandExecutor.execute(bc.getCommandsOnDiscover(), player, placeholders);
+
+                   if (collectable instanceof PlayerCollectable pc && pc.commandsOnDiscover() != null) {
+                       commandExecutor.execute(pc.commandsOnDiscover(), player, placeholders);
+                       sendGlobalMessage(player, pc.globalMessageOnDiscover(), placeholders);
+                       sendPlayerMessage(player, pc.playerMessageOnDiscover(), placeholders);
                    }
                    return true;
                 });
@@ -171,6 +184,29 @@ public class BaseCollectableManager implements CollectableManager {
                     " " + ns + ":" + id + " - " + ex);
            return false;
         });
+    }
+
+    private void sendPlayerMessage(
+        @NotNull Player player,
+        @Nullable String raw,
+        @NotNull Map<String, String> placeholders
+    ) {
+        if (raw == null || raw.isBlank()) return;
+        if (!player.isOnline()) return;
+
+        String msg = placeholderService.apply(raw, player, placeholders);
+        player.sendMessage(mm.deserialize(msg));
+    }
+
+    private void sendGlobalMessage(
+        @NotNull Player unlocker,
+        @Nullable String raw,
+        @NotNull Map<String, String> placeholders
+    ) {
+        if (raw == null || raw.isBlank()) return;
+        String msg = placeholderService.apply(raw, unlocker, placeholders);
+
+        Bukkit.getServer().broadcast(mm.deserialize(msg));
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.glance.codex.platform.paper.config.engine.codec;
 
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigField;
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigPath;
+import com.glance.codex.utils.data.TypeCodec;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 

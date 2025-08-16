@@ -1,7 +1,7 @@
 package com.glance.codex.platform.paper.config.engine.codec.base;
 
 import com.glance.codex.platform.paper.config.engine.codec.ConfigSerializable;
-import com.glance.codex.platform.paper.config.engine.codec.TypeCodec;
+import com.glance.codex.utils.data.TypeCodec;
 import lombok.extern.slf4j.Slf4j;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;

@@ -1,5 +1,6 @@
 package com.glance.codex.api.collectable.config;
 
+import com.glance.codex.api.collectable.config.model.ItemConfig;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,10 +11,10 @@ public interface RepositoryConfig {
     String namespace();
 
     @NotNull
-    ItemEntry icon();
+    ItemConfig icon();
 
     @NotNull
-    ItemEntry selectedIcon();
+    ItemConfig selectedIcon();
 
     /**
      * Raw node per entry

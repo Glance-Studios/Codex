@@ -1,5 +1,6 @@
 package com.glance.codex.platform.paper.text;
 
+import com.glance.codex.api.text.PlaceholderSource;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;

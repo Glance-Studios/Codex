@@ -1,6 +1,6 @@
 package com.glance.codex.platform.paper.collectable.config;
 
-import com.glance.codex.platform.paper.api.collectable.type.CollectableType;
+import com.glance.codex.api.collectable.type.CollectableType;
 import com.glance.codex.platform.paper.collectable.type.CollectableTypeRegistry;
 import com.google.inject.ConfigurationException;
 import com.google.inject.Injector;

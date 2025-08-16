@@ -1,8 +1,11 @@
 package com.glance.codex.platform.paper.config.model;
 
+import com.glance.codex.api.collectable.config.model.ItemConfig;
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigField;
 import com.glance.codex.platform.paper.config.engine.codec.ConfigSerializable;
+import com.glance.codex.utils.item.LoreMergeMode;
 import lombok.Data;
+import lombok.experimental.Accessors;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemFlag;
 import org.jetbrains.annotations.NotNull;
@@ -11,7 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-public class ItemEntry implements ConfigSerializable {
+@Accessors(fluent = true)
+public class ItemEntry implements ConfigSerializable, ItemConfig {
 
     @ConfigField(order = 1)
     private Material material = Material.EGG;
@@ -46,23 +50,9 @@ public class ItemEntry implements ConfigSerializable {
     @ConfigField
     private LineWrapOptions lineWrap;
 
-    public @NotNull LoreMergeMode mergeMode() {
-        return this.loreMergeMode == null ? LoreMergeMode.REPLACE : loreMergeMode;
-    }
-
-    public boolean hasDisplay() {
-        return (displayName != null && !displayName.isEmpty()) || (lore != null && !lore.isEmpty());
-    }
-
-    public boolean hasModelData() {
-        return customModelData != null || (itemComponents != null && !itemComponents.isEmpty());
-    }
-
-    public enum LoreMergeMode {
-        REPLACE,  // Replace all existing lore
-        APPEND,   // Append new lines to existing lore
-        PREPEND,  // Prepend new lines before existing lore
-        IGNORE_IF_PRESENT // Only set lore if none exists
+    @Override
+    public String rawDisplayName() {
+        return this.displayName;
     }
 
     /*

@@ -1,7 +1,7 @@
 package com.glance.codex.platform.paper.config.engine.codec.base;
 
-import com.glance.codex.platform.paper.config.engine.codec.TypeCodec;
-import com.glance.codex.utils.ReflectionUtils;
+import com.glance.codex.utils.data.TypeCodec;
+import com.glance.codex.utils.lifecycle.ReflectionUtils;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

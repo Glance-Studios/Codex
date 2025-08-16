@@ -1,9 +1,9 @@
 package com.glance.codex.platform.paper.menu;
 
-import com.glance.codex.platform.paper.api.collectable.Collectable;
-import com.glance.codex.platform.paper.api.collectable.CollectableManager;
-import com.glance.codex.platform.paper.api.collectable.CollectableRepository;
-import com.glance.codex.platform.paper.api.text.PlaceholderService;
+import com.glance.codex.api.collectable.Collectable;
+import com.glance.codex.api.collectable.CollectableManager;
+import com.glance.codex.api.collectable.CollectableRepository;
+import com.glance.codex.api.text.PlaceholderService;
 import com.glance.codex.platform.paper.config.model.ItemEntry;
 import com.glance.codex.platform.paper.item.ItemBuilder;
 import com.glance.codex.platform.paper.menu.config.CollectableMenuConfig;

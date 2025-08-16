@@ -1,6 +1,8 @@
 package com.glance.codex.platform.paper.command.executor;
 
-import com.glance.codex.platform.paper.api.text.PlaceholderService;
+import com.glance.codex.api.collectable.config.model.command.CommandConfig;
+import com.glance.codex.api.collectable.config.model.command.CommandInfo;
+import com.glance.codex.api.text.PlaceholderService;
 import com.glance.codex.platform.paper.config.model.command.CommandEntry;
 import com.glance.codex.platform.paper.config.model.command.CommandLine;
 import com.glance.codex.platform.paper.text.PlaceholderUtils;
@@ -30,14 +32,14 @@ public class CommandExecutorService implements Manager {
     }
 
     /**
-     * Executes all commands (per their {@link CommandLine#getRunAs()} modes) with no placeholders
+     * Executes all commands (per their {@link CommandLine#runAs()} modes) with no placeholders
      */
     public void execute(@NotNull CommandEntry command) {
         execute(command, null, Collections.emptyMap());
     }
 
     /**
-     * Executes all commands (per their {@link CommandLine#getRunAs()} modes) with placeholder values
+     * Executes all commands (per their {@link CommandLine#runAs()} modes) with placeholder values
      *
      * @param placeholders key-value pairs to replace in the command
      */
@@ -56,13 +58,13 @@ public class CommandExecutorService implements Manager {
 
     /**
      * Executes all commands with the given player and placeholder context
-     * Commands will be run as console or player according to {@link CommandLine#getRunAs()}
+     * Commands will be run as console or player according to {@link CommandLine#runAs()}
      *
      * @param player the player context (used for PLAYER mode)
      * @param placeholders placeholders for command resolution
      */
     public void execute(
-        @NotNull CommandEntry command,
+        @NotNull CommandConfig command,
         @Nullable Player player,
         @Nullable Map<String, String> placeholders
     ) {
@@ -78,7 +80,7 @@ public class CommandExecutorService implements Manager {
      *
      * @param player the player to run commands as
      */
-    public void executeAsPlayer(@NotNull CommandEntry command, @NotNull Player player) {
+    public void executeAsPlayer(@NotNull CommandConfig command, @NotNull Player player) {
         executeAsPlayer(command, player, null);
     }
 
@@ -89,7 +91,7 @@ public class CommandExecutorService implements Manager {
      * @param placeholders placeholder values
      */
     public void executeAsPlayer(
-            @NotNull CommandEntry command,
+            @NotNull CommandConfig command,
             @NotNull Player player,
             @Nullable Map<String, String> placeholders
     ) {
@@ -103,7 +105,7 @@ public class CommandExecutorService implements Manager {
      * @param placeholders optional placeholder values
      */
     public void executeAsConsole(
-            @NotNull CommandEntry command,
+            @NotNull CommandConfig command,
             @Nullable Map<String, String> placeholders
     ) {
         executeCommand(CommandLine.Target.CONSOLE, command, null, placeholders);
@@ -127,26 +129,26 @@ public class CommandExecutorService implements Manager {
     /**
      * Internal helper to resolve and dispatch commands using the specified run mode
      *
-     * @param forceMode if nonnull, overrides each line’s {@link CommandLine.Target}
+     * @param forceMode if nonnull, overrides each line’s {@link CommandInfo.Target}
      * @param entry the {@link CommandEntry} to run
      * @param player the player context (used for PLAYER target)
      * @param placeholders key-value placeholder map
      */
     private void executeCommand(
-            @Nullable CommandLine.Target forceMode,
-            @NotNull CommandEntry entry,
+            @Nullable CommandInfo.Target forceMode,
+            @NotNull CommandConfig<CommandLine> entry,
             @Nullable Player player,
             @Nullable Map<String, String> placeholders
     ) {
-        if (!entry.isEnabled() || entry.getCommands().isEmpty()) return;
+        if (!entry.enabled() || entry.commands().isEmpty()) return;
 
-        for (CommandLine line : entry.getCommands()) {
-            String resolved = placeholderService.apply(line.getCommand(), player, placeholders);
+        for (CommandInfo line : entry.commands()) {
+            String resolved = placeholderService.apply(line.command(), player, placeholders);
 
-            CommandLine.Target mode = (forceMode != null) ? forceMode : line.getRunAs();
+            CommandLine.Target mode = (forceMode != null) ? forceMode : line.runAs();
             CommandSender sender = switch (mode) {
-                case Target.PLAYER -> player != null ? player : Bukkit.getConsoleSender();
-                case Target.CONSOLE -> Bukkit.getConsoleSender();
+                case CommandLine.Target.PLAYER -> player != null ? player : Bukkit.getConsoleSender();
+                case CommandLine.Target.CONSOLE -> Bukkit.getConsoleSender();
             };
 
             Bukkit.dispatchCommand(sender, resolved);

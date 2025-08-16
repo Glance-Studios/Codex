@@ -1,6 +1,6 @@
 package com.glance.codex.platform.paper.collectable.config;
 
-import com.glance.codex.platform.paper.api.collectable.config.RepositoryConfig;
+import com.glance.codex.api.collectable.config.RepositoryConfig;
 import com.glance.codex.platform.paper.config.engine.annotation.Config;
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigPath;
 import com.glance.codex.platform.paper.config.model.ItemEntry;

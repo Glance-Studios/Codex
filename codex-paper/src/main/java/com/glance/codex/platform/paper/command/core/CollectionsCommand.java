@@ -1,7 +1,7 @@
 package com.glance.codex.platform.paper.command.core;
 
-import com.glance.codex.platform.paper.api.collectable.CollectableManager;
-import com.glance.codex.platform.paper.api.collectable.CollectableRepository;
+import com.glance.codex.api.collectable.CollectableManager;
+import com.glance.codex.api.collectable.CollectableRepository;
 import com.glance.codex.platform.paper.command.engine.CommandHandler;
 import com.glance.codex.platform.paper.menu.CollectablesMenu;
 import com.google.auto.service.AutoService;

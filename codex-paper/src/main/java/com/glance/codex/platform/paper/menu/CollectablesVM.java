@@ -1,6 +1,6 @@
 package com.glance.codex.platform.paper.menu;
 
-import com.glance.codex.platform.paper.api.collectable.CollectableManager;
+import com.glance.codex.api.collectable.CollectableManager;
 import dev.triumphteam.nova.MutableState;
 import dev.triumphteam.nova.holder.StateHolder;
 import lombok.AllArgsConstructor;

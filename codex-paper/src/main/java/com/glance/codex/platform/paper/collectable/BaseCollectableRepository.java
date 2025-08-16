@@ -3,8 +3,8 @@ package com.glance.codex.platform.paper.collectable;
 import com.glance.codex.api.collectable.Collectable;
 import com.glance.codex.api.collectable.CollectableRepository;
 import com.glance.codex.api.collectable.config.RepositoryConfig;
+import com.glance.codex.api.collectable.config.model.ItemConfig;
 import com.glance.codex.api.text.PlaceholderService;
-import com.glance.codex.platform.paper.config.model.ItemEntry;
 import com.glance.codex.platform.paper.item.ItemBuilder;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
@@ -23,8 +23,8 @@ public class BaseCollectableRepository implements CollectableRepository {
     private final PlaceholderService resolver;
 
     private final String namespace;
-    private final ItemEntry icon;
-    private final ItemEntry selectedIcon;
+    private final ItemConfig icon;
+    private final ItemConfig selectedIcon;
     private final Map<String, Collectable> entries;
 
 

@@ -1,11 +1,10 @@
 package com.glance.codex.platform.paper.inject;
 
 import com.glance.codex.bootstrap.GuiceServiceLoader;
-import com.glance.codex.platform.paper.api.collectable.CollectableManager;
-import com.glance.codex.platform.paper.api.collectable.CollectableRepository;
-import com.glance.codex.platform.paper.api.collectable.config.RepositoryConfig;
+import com.glance.codex.api.collectable.CollectableManager;
+import com.glance.codex.api.collectable.config.RepositoryConfig;
 import com.glance.codex.platform.paper.collectable.config.CollectableRepositoryConfig;
-import com.glance.codex.platform.paper.api.collectable.type.CollectableType;
+import com.glance.codex.api.collectable.type.CollectableType;
 import com.glance.codex.platform.paper.command.engine.CommandHandler;
 import com.glance.codex.platform.paper.command.engine.CommandManager;
 import com.glance.codex.platform.paper.command.engine.argument.TypedArgParser;
