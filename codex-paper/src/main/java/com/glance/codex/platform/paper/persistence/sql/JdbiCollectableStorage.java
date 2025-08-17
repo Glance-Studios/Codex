@@ -79,6 +79,34 @@ public class JdbiCollectableStorage implements CollectableStorage {
     }
 
     @Override
+    public CompletableFuture<Boolean> deleteUnlock(@NotNull UUID playerId, @NotNull String namespace, @NotNull String id) {
+        return CompletableFuture.supplyAsync(() -> {
+           if (!isSqlite()) throw new UnsupportedOperationException();
+           int changed = sql.jdbi().withExtension(SqliteCollectableDao.class,
+                   dao -> dao.deleteOne(playerId.toString(), namespace, id));
+           return changed > 0;
+        });
+    }
+
+    @Override
+    public CompletableFuture<Integer> clearNamespace(@NotNull UUID playerId, @NotNull String namespace) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (!isSqlite()) throw new UnsupportedOperationException();
+            return sql.jdbi().withExtension(SqliteCollectableDao.class,
+                    dao -> dao.deleteNamespace(playerId.toString(), namespace));
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> clearAll(@NotNull UUID playerId) {
+        return CompletableFuture.runAsync(() -> {
+            if (!isSqlite()) throw new UnsupportedOperationException();
+            sql.jdbi().useExtension(SqliteCollectableDao.class,
+                    dao -> dao.deleteAllForPlayer(playerId.toString()));
+        });
+    }
+
+    @Override
     public CompletableFuture<Boolean> isUnlocked(@NotNull UUID playerId, @NotNull String namespace, @NotNull String id) {
         return CompletableFuture.supplyAsync(() -> {
             Boolean result = isSqlite()

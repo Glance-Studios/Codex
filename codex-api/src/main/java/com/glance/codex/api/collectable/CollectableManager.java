@@ -29,6 +29,10 @@ public interface CollectableManager extends Manager {
 
     CompletableFuture<Set<String>> unlockedIds(@NotNull Player player, @NotNull String namespace);
 
-    // TODO: add other registry addition ability either here or only API?
+    CompletableFuture<Boolean> relock(@NotNull Player player, @NotNull NamespacedKey key);
+
+    CompletableFuture<Integer> clearRepo(@NotNull Player player, @NotNull String namespace);
+
+    CompletableFuture<Void> clearAll(@NotNull Player player);
 
 }

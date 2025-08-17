@@ -57,6 +57,27 @@ public interface CollectableStorage {
     );
 
     /**
+     * Deletes a single unlock (re-locks it)
+     *
+     * @return "true" if it existed
+     */
+    CompletableFuture<Boolean> deleteUnlock(
+            @NotNull UUID playerId, @NotNull String namespace, @NotNull String id
+    );
+
+    /**
+     * Removes every unlock in the namespace
+     *
+     * @return how many entries were removed
+     */
+    CompletableFuture<Integer> clearNamespace(
+            @NotNull UUID playerId, @NotNull String namespace
+    );
+
+    /** Nukes all collectables data for this player */
+    CompletableFuture<Void> clearAll(@NotNull UUID playerId);
+
+    /**
      * Checks whether a collectable is unlocked for the player
      *
      * @param playerId UUID of the player

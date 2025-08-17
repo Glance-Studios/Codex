@@ -8,16 +8,9 @@ import com.google.auto.service.AutoService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
-import net.kyori.adventure.key.Key;
-import net.kyori.adventure.nbt.api.BinaryTagHolder;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.incendo.cloud.annotations.Argument;
 import org.incendo.cloud.annotations.Command;
@@ -113,6 +106,64 @@ public class CollectionsCommand implements CommandHandler {
     @Permission("collectables.menu")
     public void openMenu(@NotNull Player sender) {
         this.menu.open(sender, false);
+    }
+
+    @Command("collectables relock <player> <namespace> <id>")
+    @Permission("collectables.admin")
+    public void relock(
+        @NotNull CommandSender sender,
+        @Argument("player") Player target,
+        @Argument(value = "namespace", suggestions = "namespaces") String namespace,
+        @Argument(value = "id", suggestions = "entries") String id
+    ) {
+        final NamespacedKey key = NamespacedKey.fromString(namespace + ":" + id);
+        if (key == null) {
+            sender.sendMessage("Invalid key " + namespace + ":" + id);
+            return;
+        }
+
+        manager.relock(target, key).thenAccept(removed -> {
+           if (removed) {
+               sender.sendMessage("Relocked " + key.asString() + " for " + target.getName());
+           } else {
+               sender.sendMessage(target.getName() + " did not have " + key.asString() + " unlocked");
+           }
+        }).exceptionally(ex -> {
+           sender.sendMessage("Relock failed: " + ex.getMessage());
+           log.error("Relock failed for '{}' key '{}' due to: ", target.getName(), key.asString(), ex);
+           return null;
+        });
+    }
+
+    @Command("collectables clear <player> <namespace>")
+    @Permission("collectables.admin")
+    public void clearNamespace(
+        @NotNull CommandSender sender,
+        @Argument("player") Player target,
+        @Argument(value = "namespace", suggestions = "namespaces") String namespace
+    ) {
+        manager.clearRepo(target, namespace).thenAccept(removed -> {
+           sender.sendMessage("Cleared " + removed + " entries in '" + namespace + "' for " + target.getName());
+        }).exceptionally(ex -> {
+            sender.sendMessage("Clear failed: " + ex.getMessage());
+            log.error("Clear repo failed for '{}' ns '{}' due to:", target.getName(), namespace, ex);
+            return null;
+        });
+    }
+
+    @Command("collectables clearall <player>")
+    @Permission("collectables.admin")
+    public void clearAll(
+        @NotNull CommandSender sender,
+        @Argument("player") Player target
+    ) {
+        manager.clearAll(target).thenRun(() -> {
+            sender.sendMessage("Cleared all collectables data for " + target.getName());
+        }).exceptionally(ex -> {
+           sender.sendMessage("Clear-all failed: " + ex.getMessage());
+           log.error("Clear-all failed for '{}' due to:", target.getName(), ex);
+           return null;
+        });
     }
 
 }

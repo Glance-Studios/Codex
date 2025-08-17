@@ -225,4 +225,19 @@ public class BaseCollectableManager implements CollectableManager {
         return storageProvider.get().loadUnlockedIds(player.getUniqueId(), namespace);
     }
 
+    @Override
+    public CompletableFuture<Boolean> relock(@NotNull Player player, @NotNull NamespacedKey key) {
+        return storageProvider.get().deleteUnlock(player.getUniqueId(), key.getNamespace(), key.getKey());
+    }
+
+    @Override
+    public CompletableFuture<Integer> clearRepo(@NotNull Player player, @NotNull String namespace) {
+        return storageProvider.get().clearNamespace(player.getUniqueId(), namespace);
+    }
+
+    @Override
+    public CompletableFuture<Void> clearAll(@NotNull Player player) {
+        return storageProvider.get().clearAll(player.getUniqueId());
+    }
+
 }

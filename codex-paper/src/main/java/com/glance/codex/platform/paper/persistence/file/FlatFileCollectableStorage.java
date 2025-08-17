@@ -89,6 +89,57 @@ public class FlatFileCollectableStorage implements CollectableStorage {
     }
 
     @Override
+    public CompletableFuture<Boolean> deleteUnlock(@NotNull UUID playerId, @NotNull String namespace, @NotNull String id) {
+        return CompletableFuture.supplyAsync(() -> {
+            PlayerCollectables data = loadData(playerId);
+            boolean removed = data.unlocks()
+                .getOrDefault(namespace, Set.of())
+                .remove(id);
+
+            var first = data.firstUnlockedAt().get(namespace);
+            if (first != null) first.remove(id);
+            var replay = data.lastReplayedAt().get(namespace);
+            if (replay != null) replay.remove(id);
+
+            data.unlocks().computeIfPresent(namespace, (ns, set) -> set.isEmpty() ? null : set);
+            data.firstUnlockedAt().computeIfPresent(namespace, (ns, map) -> map.isEmpty() ? null : map);
+            data.lastReplayedAt().computeIfPresent(namespace, (ns, map) -> map.isEmpty() ? null : map);
+
+            if (removed) saveData(playerId, data);
+            return removed;
+        });
+    }
+
+    @Override
+    public CompletableFuture<Integer> clearNamespace(@NotNull UUID playerId, @NotNull String namespace) {
+        return CompletableFuture.supplyAsync(() -> {
+            PlayerCollectables data = loadData(playerId);
+            int count = data.unlocks().getOrDefault(namespace, Set.of()).size();
+
+            data.unlocks().remove(namespace);
+            data.firstUnlockedAt().remove(namespace);
+            data.lastReplayedAt().remove(namespace);
+
+            if (count > 0) saveData(playerId, data);
+            return count;
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> clearAll(@NotNull UUID playerId) {
+        return CompletableFuture.runAsync(() -> {
+            synchronized (fileIOLock) {
+                File f = file(playerId);
+                try {
+                    Files.deleteIfExists(f.toPath());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
+
+    @Override
     public CompletableFuture<Boolean> isUnlocked(@NotNull UUID playerId, @NotNull String namespace, @NotNull String id) {
         return CompletableFuture.supplyAsync(() -> loadData(playerId).isUnlocked(namespace, id));
     }

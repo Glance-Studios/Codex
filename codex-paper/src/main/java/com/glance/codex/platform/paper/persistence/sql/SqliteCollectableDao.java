@@ -74,6 +74,23 @@ public interface SqliteCollectableDao {
     List<Row> loadAll(@Bind("player") String player);
 
     @SqlUpdate("""
+        DELETE FROM collectable_unlocks
+        WHERE player_uuid=:player AND namespace=:ns AND id=:id
+        """)
+    int deleteOne(
+        @Bind("player") String player,
+        @Bind("ns") String namespace,
+        @Bind("id") String id);
+
+    @SqlUpdate("""
+        DELETE FROM collectable_unlocks
+        WHERE player_uuid=:player AND namespace=:ns
+        """)
+    int deleteNamespace(
+        @Bind("player") String player,
+        @Bind("ns") String namespace);
+
+    @SqlUpdate("""
         DELETE FROM collectable_unlocks WHERE player_uuid=:player
         """)
     void deleteAllForPlayer(@Bind("player") String player);
