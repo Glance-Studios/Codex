@@ -1,0 +1,16 @@
+book:
+  enabled: true
+  title: "Mage's Manifesto"
+  author: "Arcanist Lysa"
+  content: |
+    We will not hide in towers.
+    Magic is a language, and every child should read.
+
+    Unchain the libraries. Teach the sigils for warmth,
+    for clean water, for mending a torn coat.
+
+    Keep the dangerous names in locked boxes, yes—
+    but do not lock away the light.
+  maxLinesPerPage: 14
+  collapseBlankLines: true
+  useMiniMessage: false

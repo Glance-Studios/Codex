@@ -1,0 +1,33 @@
+enabled: true
+namespace: "notes"
+display_name: "<gold>Ancient Notes"
+plain_display_name: "Ancient Notes"
+icon:
+  material: BOOK
+  displayName: "<gold>Notes"
+  lore:
+    - "<gray>Discover scattered pages"
+    - "<gray>hidden throughout the world."
+  glint: true
+selected_icon:
+  material: WRITABLE_BOOK
+  displayName: "<green>Selected Notes"
+  lore:
+    - "<yellow>Currently viewing notes"
+show_when_locked: true
+entries:
+  example_note:
+    type: "NOTE"
+    displayName: "<white>Example Note"
+    plainDisplayName: "Example Note"
+    showWhenLocked: true
+    allowReplay: false
+    unlockedIcon:
+      material: PAPER
+      displayName: "<white>Example Note (Unlocked)"
+      lore:
+        - "<gray>An old, fragile piece of parchment."
+      glint: true
+    lockedIcon:
+      material: MAP
+      displayName: "<dark_gray>???"

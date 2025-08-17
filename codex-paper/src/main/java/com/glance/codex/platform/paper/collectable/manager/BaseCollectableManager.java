@@ -158,7 +158,6 @@ public class BaseCollectableManager implements CollectableManager {
                     if (collectable instanceof Discoverable d) d.onReplay(player);
 
                     if (collectable instanceof PlayerCollectable pc) {
-                        log.warn("Do we have replay commands? {}", pc.commandsOnReplay());
                         if (pc.commandsOnReplay() != null) {
                             this.commandExecutor.execute(pc.commandsOnReplay(), player, placeholders);
                         }
@@ -175,7 +174,6 @@ public class BaseCollectableManager implements CollectableManager {
                    if (collectable instanceof Discoverable d) d.onDiscover(player);
 
                    if (collectable instanceof PlayerCollectable pc) {
-                       log.warn("Do we have disc commands? {}", pc.commandsOnDiscover());
                        if (pc.commandsOnDiscover() != null) {
                            commandExecutor.execute(pc.commandsOnDiscover(), player, placeholders);
                        }

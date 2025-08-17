@@ -1,0 +1,11 @@
+storage:
+  backend: FLATFILE
+  flatfile:
+    dir: playerdata/collectables # Used when backend = 'FLATFILE'
+  sql:
+    jdbcUrl: jdbc:sqlite:${plugin.data}/collectables.db
+    username: ''
+    password: ''
+    pool:
+      maxSize: 6
+      minIdle: 2

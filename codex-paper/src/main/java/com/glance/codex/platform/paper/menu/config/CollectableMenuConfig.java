@@ -30,7 +30,7 @@ public class CollectableMenuConfig implements Config.Handler {
 
     // Filler
     @ConfigPath("items.filler") private ItemEntry filler = ItemEntry
-            .of(Material.LIGHT_GRAY_STAINED_GLASS_PANE).name("<gray>Filler");
+            .of(Material.LIGHT_GRAY_STAINED_GLASS_PANE).name("<gray> ");
 
     // Buttons - todo
     @ConfigPath("items.repo.next") private ItemEntry repoNextItem;

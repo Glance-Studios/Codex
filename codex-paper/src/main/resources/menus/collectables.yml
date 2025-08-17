@@ -1,0 +1,17 @@
+title: <#5306bf>Collections
+rows: 6
+entry:
+  slots: rows:1-4
+  nav:
+    prev: row:5 col:1
+    next: row:5 col:9
+repo:
+  slots: row:6 cols:2-8
+  nav:
+    prev: row:6 col:1
+    next: row:6 col:9
+items:
+  filler:
+    material: LIGHT_GRAY_STAINED_GLASS_PANE
+    displayName: <gray>
+    glint: false

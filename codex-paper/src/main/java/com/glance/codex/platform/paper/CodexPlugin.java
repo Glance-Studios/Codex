@@ -38,6 +38,11 @@ public class CodexPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        saveResource("config.yml", false);
+        saveResource("menus/collectables.yml", false);
+        saveResource("collectables/notes/example_note.yml", false);
+        saveResource("collectables/notes.yml", false);
+
         PaperComponentScanner.scanAndInitialize(this, this.injector);
 
         this.placeholderService = injector.getInstance(PlaceholderService.class);
