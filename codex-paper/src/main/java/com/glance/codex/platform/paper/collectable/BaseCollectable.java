@@ -1,6 +1,7 @@
 package com.glance.codex.platform.paper.collectable;
 
 import com.glance.codex.api.collectable.base.PlayerCollectable;
+import com.glance.codex.api.text.PlaceholderService;
 import com.glance.codex.platform.paper.CodexPlugin;
 import com.glance.codex.api.collectable.CollectableMeta;
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigField;
@@ -8,10 +9,12 @@ import com.glance.codex.platform.paper.config.engine.codec.ConfigSerializable;
 import com.glance.codex.platform.paper.config.model.ItemEntry;
 import com.glance.codex.platform.paper.config.model.command.CommandEntry;
 import com.glance.codex.platform.paper.item.ItemBuilder;
+import com.google.inject.Inject;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +23,15 @@ import org.jetbrains.annotations.Nullable;
 @Getter
 @Accessors(fluent = true)
 public class BaseCollectable extends PlayerCollectable implements ConfigSerializable {
+
+    private final PlaceholderService placeholderService;
+
+    @Inject
+    public BaseCollectable(
+            @NotNull final PlaceholderService placeholderService
+    ) {
+        this.placeholderService = placeholderService;
+    }
 
     protected CollectableMeta meta;
 
@@ -30,7 +42,7 @@ public class BaseCollectable extends PlayerCollectable implements ConfigSerializ
     protected String displayName;
 
     @ConfigField
-    protected String rawDisplayName;
+    protected String plainDisplayName;
 
     @ConfigField
     protected boolean showWhenLocked;
@@ -62,32 +74,51 @@ public class BaseCollectable extends PlayerCollectable implements ConfigSerializ
     @ConfigField
     protected String globalMessageOnReplay;
 
-    // todo placeholder service should be injectable
+    @Override public String playerMessageOnReplay() {
+        return playerMessageOnReplay != null ? playerMessageOnReplay : playerMessageOnDiscover;
+    }
+
+    @Override public String globalMessageOnReplay() {
+        return globalMessageOnReplay != null ? globalMessageOnReplay : globalMessageOnDiscover;
+    }
 
     @Override
     public @NotNull Component displayName() {
-        String resolved = CodexPlugin
-                .getInstance()
-                .placeholderService()
-                .apply(displayName, null);
+        String resolved = placeholderService.apply(displayName, null);
         return MiniMessage.miniMessage().deserialize(resolved);
     }
 
     @Override
     public @NotNull String rawDisplayName() {
-        return CodexPlugin
-                .getInstance()
-                .placeholderService()
-                .apply(displayName, null);
+        return placeholderService.apply(displayName, null);
+    }
+
+    @Override
+    public @NotNull String plainDisplayName() {
+        if (plainDisplayName == null || plainDisplayName.isBlank()) {
+            plainDisplayName = PlainTextComponentSerializer.plainText().serialize(displayName());
+        }
+        return placeholderService.apply(plainDisplayName, null);
+    }
+
+    @Override
+    public CommandEntry commandsOnReplay() {
+        return (commandsOnReplay == null || commandsOnReplay().isEmpty()) ? commandsOnDiscover : commandsOnReplay;
     }
 
     @Override
     public @NotNull ItemStack iconUnlocked(@Nullable OfflinePlayer player) {
+        if (unlockedIcon.displayName() == null || unlockedIcon.displayName().isBlank()) {
+            unlockedIcon.displayName(displayName);
+        }
         return ItemBuilder.fromConfig(unlockedIcon, player, CodexPlugin.getInstance().placeholderService()).build();
     }
 
     @Override
     public @NotNull ItemStack iconLocked(@Nullable OfflinePlayer player) {
+        if (lockedIcon.displayName() == null || lockedIcon.displayName().isBlank()) {
+            lockedIcon.displayName("<dark_gray>???");
+        }
         return ItemBuilder.fromConfig(lockedIcon, player, CodexPlugin.getInstance().placeholderService()).build();
     }
 

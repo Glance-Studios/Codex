@@ -25,8 +25,8 @@ public class CollectableRepositoryConfig implements Config.Contract, RepositoryC
     @ConfigPath("display_name")
     private String displayName = "";
 
-    @ConfigPath("display_name_raw")
-    private String displayNameRaw = "";
+    @ConfigPath("plain_display_name")
+    private String plainDisplayName;
 
     @ConfigPath("icon")
     private ItemEntry icon = ItemEntry.of(Material.EGG);

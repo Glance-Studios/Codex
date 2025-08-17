@@ -14,6 +14,9 @@ public interface Collectable {
     @NotNull String rawDisplayName();
 
     @NotNull
+    String plainDisplayName();
+
+    @NotNull
     ItemStack iconUnlocked(@Nullable OfflinePlayer player);
 
     @NotNull

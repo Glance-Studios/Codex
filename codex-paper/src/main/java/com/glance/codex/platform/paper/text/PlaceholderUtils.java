@@ -1,8 +1,11 @@
 package com.glance.codex.platform.paper.text;
 
 import com.glance.codex.api.collectable.Collectable;
+import com.glance.codex.api.collectable.CollectableMeta;
 import com.glance.codex.api.collectable.CollectableRepository;
 import lombok.experimental.UtilityClass;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -23,14 +26,16 @@ public class PlaceholderUtils {
      * Includes:
      *
      *  <ul>
-     *      <li><code>namespace</code> -> repo namespace (e.g. "notes")</li>
-     *      <li><code>id</code> -> collectable id within the repo (e.g. "mysterious_note")</li>
-     *      <li><code>key</code> -> full key "namespace:id"</li>
-     *      <li><code>collectable_display</code> -> MiniMessage-resolved display name (legacy-friendly plain string)</li>
-     *      <li><code>collectable_raw</code> -> raw display name (no MiniMessage formatting)</li>
-     *      <li><code>repo_namespace</code> -> same as namespace (alias)</li>
-     *      <li><code>allow_replay</code> -> "true"/"false"</li>
-     *      <li><code>show_when_locked</code> -> "true"/"false"</li>
+     *      <li>{@code {namespace}} -> repo namespace (e.g. "notes")</li>
+     *      <li>{@code {id}} -> collectable id within the repo (e.g. "mysterious_note")</li>
+     *      <li>{@code {key}} -> full key "namespace:id"</li>
+     *      <li>{@code {collectable_name_formatted}} -> MiniMessage-ready display name</li>
+     *      <li>{@code {collectable_name_plain}} -> Raw display name with no formatting tags</li>
+     *      <li>{@code {repo_namespace}} -> same as namespace (alias)</li>
+     *      <li>{@code {allow_replay}} -> "true"/"false"</li>
+     *      <li>{@code {show_when_locked}} -> "true"/"false"</li>
+     *      <li>{@code {repo_name_formatted}} -> MiniMessage-ready display name of the repo</li>
+     *      <li>{@code {repo_name_plain}} -> Raw repo display name with no formatting tags</li>
      *  </ul>
      */
     public @NotNull Map<String, String> appendCollectableTags(
@@ -48,15 +53,18 @@ public class PlaceholderUtils {
         map.put("key", key.asString());
         map.put("repo_namespace", key.namespace());
 
-        // Display names as plain strings (safe for commands)
-        try {
-            map.put("collectable_display", PlainTextComponentSerializer.plainText().serialize(collectable.displayName()));
-        } catch (Throwable t) {
-            map.put("collectable_display", collectable.rawDisplayName()); // fallback
-        }
-        map.put("collectable_raw", collectable.rawDisplayName());
+        map.put("collectable_name_formatted", collectable.rawDisplayName());
+        map.put("collectable_name_plain", collectable.plainDisplayName());
         map.put("allow_replay", String.valueOf(collectable.allowReplay()));
         map.put("show_when_locked", String.valueOf(collectable.showWhenLocked()));
+
+        CollectableMeta meta = collectable.getMeta();
+        if (meta != null) {
+            CollectableRepository repo = meta.repository();
+
+            map.put("repo_name_formatted", repo.displayNameRaw());
+            map.put("repo_name_plain", repo.plainDisplayName());
+        }
 
         return map;
     }
@@ -66,12 +74,12 @@ public class PlaceholderUtils {
      * <p>
      * Common tokens:
      * <ul>
-     *     <li>{@code <player>} -> player name</li>
-     *     <li>{@code <uuid>} -> UUID</li>
-     *     <li>{@code <world>} -> world name</li>
-     *     <li>{@code <x>}, {@code <y>}, {@code <z>} -> block coordinates</li>
-     *     <li>{@code <location>} -> formatted location as {@code (x, y, z)}</li>
-     *     <li>{@code <block_location>} -> formatted block location as {@code (blockX, blockY, blockZ)}</li>
+     *     <li>{@code {player}} -> player name</li>
+     *     <li>{@code {uuid}} -> UUID</li>
+     *     <li>{@code {world}} -> world name</li>
+     *     <li>{@code {x}}, {@code {y}}, {@code {z}} -> block coordinates</li>
+     *     <li>{@code {location}} -> formatted location as {@code (x, y, z)}</li>
+     *     <li>{@code {block_location}} -> formatted block location as {@code (blockX, blockY, blockZ)}</li>
      * </ul>
      */
     public @NotNull Map<String, String> appendPlayerTags(

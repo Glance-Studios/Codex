@@ -79,4 +79,19 @@ public class ItemEntry implements ConfigSerializable, ItemConfig {
         return this;
     }
 
+    public static @NotNull ItemEntry from(@NotNull ItemConfig config) {
+        ItemEntry entry = new ItemEntry();
+        entry.displayName(config.rawDisplayName());
+        entry.material(entry.material);
+        entry.lore(config.lore());
+        entry.customModelData(config.customModelData());
+        entry.itemComponents(config.itemComponents());
+        entry.flags(config.flags());
+        entry.lineWrap(LineWrapOptions.from(config.lineWrap()));
+        entry.loreMergeMode(config.loreMergeMode());
+        entry.glint(config.glint());
+
+        return entry;
+    }
+
 }

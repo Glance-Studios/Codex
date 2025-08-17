@@ -6,9 +6,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface RepositoryConfig {
+
     boolean enabled();
+
     @NotNull
     String namespace();
+
+    @NotNull String displayName();
+
+    @Nullable String plainDisplayName();
 
     @NotNull
     ItemConfig icon();
@@ -23,4 +29,5 @@ public interface RepositoryConfig {
      */
     @Nullable
     ConfigurationSection rawEntries();
+
 }

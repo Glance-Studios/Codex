@@ -1,5 +1,6 @@
 package com.glance.codex.api.collectable;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.inventory.ItemStack;
@@ -11,6 +12,13 @@ import java.util.Map;
 public interface CollectableRepository {
 
     @NotNull String namespace();
+
+    @NotNull
+    Component displayName();
+
+    @NotNull String displayNameRaw();
+
+    @NotNull String plainDisplayName();
 
     @NotNull
     Map<String, Collectable> entries();

@@ -13,6 +13,7 @@ import com.google.inject.Singleton;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,10 +25,15 @@ import java.util.Map;
 @AutoService(Manager.class)
 public class CommandExecutorService implements Manager {
 
+    private final Plugin plugin;
     private final PlaceholderService placeholderService;
 
     @Inject
-    public CommandExecutorService(PlaceholderService placeholderService) {
+    public CommandExecutorService(
+        @NotNull final Plugin plugin,
+        @NotNull final PlaceholderService placeholderService
+    ) {
+        this.plugin = plugin;
         this.placeholderService = placeholderService;
     }
 
@@ -64,7 +70,7 @@ public class CommandExecutorService implements Manager {
      * @param placeholders placeholders for command resolution
      */
     public void execute(
-        @NotNull CommandConfig command,
+        @NotNull CommandConfig<? extends CommandInfo> command,
         @Nullable Player player,
         @Nullable Map<String, String> placeholders
     ) {
@@ -80,7 +86,7 @@ public class CommandExecutorService implements Manager {
      *
      * @param player the player to run commands as
      */
-    public void executeAsPlayer(@NotNull CommandConfig command, @NotNull Player player) {
+    public void executeAsPlayer(@NotNull CommandConfig<? extends CommandInfo> command, @NotNull Player player) {
         executeAsPlayer(command, player, null);
     }
 
@@ -91,7 +97,7 @@ public class CommandExecutorService implements Manager {
      * @param placeholders placeholder values
      */
     public void executeAsPlayer(
-            @NotNull CommandConfig command,
+            @NotNull CommandConfig<? extends CommandInfo> command,
             @NotNull Player player,
             @Nullable Map<String, String> placeholders
     ) {
@@ -105,7 +111,7 @@ public class CommandExecutorService implements Manager {
      * @param placeholders optional placeholder values
      */
     public void executeAsConsole(
-            @NotNull CommandConfig command,
+            @NotNull CommandConfig<? extends CommandInfo> command,
             @Nullable Map<String, String> placeholders
     ) {
         executeCommand(CommandLine.Target.CONSOLE, command, null, placeholders);
@@ -136,23 +142,25 @@ public class CommandExecutorService implements Manager {
      */
     private void executeCommand(
             @Nullable CommandInfo.Target forceMode,
-            @NotNull CommandConfig<CommandLine> entry,
+            @NotNull CommandConfig<? extends CommandInfo> entry,
             @Nullable Player player,
             @Nullable Map<String, String> placeholders
     ) {
         if (!entry.enabled() || entry.commands().isEmpty()) return;
 
-        for (CommandInfo line : entry.commands()) {
-            String resolved = placeholderService.apply(line.command(), player, placeholders);
+        this.plugin.getServer().getScheduler().runTask(this.plugin, () -> {
+            for (CommandInfo line : entry.commands()) {
+                String resolved = placeholderService.apply(line.command(), player, placeholders);
 
-            CommandLine.Target mode = (forceMode != null) ? forceMode : line.runAs();
-            CommandSender sender = switch (mode) {
-                case CommandLine.Target.PLAYER -> player != null ? player : Bukkit.getConsoleSender();
-                case CommandLine.Target.CONSOLE -> Bukkit.getConsoleSender();
-            };
+                CommandLine.Target mode = (forceMode != null) ? forceMode : line.runAs();
+                CommandSender sender = switch (mode) {
+                    case CommandLine.Target.PLAYER -> player != null ? player : Bukkit.getConsoleSender();
+                    case CommandLine.Target.CONSOLE -> Bukkit.getConsoleSender();
+                };
 
-            Bukkit.dispatchCommand(sender, resolved);
-        }
+                Bukkit.dispatchCommand(sender, resolved);
+            }
+        });
     }
 
 }

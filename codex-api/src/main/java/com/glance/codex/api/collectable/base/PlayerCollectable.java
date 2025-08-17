@@ -3,6 +3,7 @@ package com.glance.codex.api.collectable.base;
 import com.glance.codex.api.collectable.Collectable;
 import com.glance.codex.api.collectable.Discoverable;
 import com.glance.codex.api.collectable.config.model.command.CommandConfig;
+import com.glance.codex.api.collectable.config.model.command.CommandInfo;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,11 +25,11 @@ public abstract class PlayerCollectable implements Collectable, Discoverable {
         return playerMessageOnDiscover();
     }
 
-    public CommandConfig commandsOnDiscover() {
-        return new CommandConfig(){};
+    public CommandConfig<? extends CommandInfo> commandsOnDiscover() {
+        return new CommandConfig<>(){};
     }
 
-    public CommandConfig commandsOnReplay() {
+    public CommandConfig<? extends CommandInfo> commandsOnReplay() {
         return commandsOnDiscover();
     }
 

@@ -12,4 +12,8 @@ public interface CommandConfig<T extends CommandInfo> {
         return List.of();
     }
 
+    default boolean isEmpty() {
+        return (commands() == null || commands().isEmpty());
+    }
+
 }

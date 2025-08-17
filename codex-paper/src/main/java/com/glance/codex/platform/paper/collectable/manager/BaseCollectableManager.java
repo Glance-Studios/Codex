@@ -157,8 +157,11 @@ public class BaseCollectableManager implements CollectableManager {
                 return storage.recordReplay(uuid, ns, id, now).thenApply(v -> {
                     if (collectable instanceof Discoverable d) d.onReplay(player);
 
-                    if (collectable instanceof PlayerCollectable pc && pc.commandsOnReplay() != null) {
-                        this.commandExecutor.execute(pc.commandsOnReplay(), player, placeholders);
+                    if (collectable instanceof PlayerCollectable pc) {
+                        log.warn("Do we have replay commands? {}", pc.commandsOnReplay());
+                        if (pc.commandsOnReplay() != null) {
+                            this.commandExecutor.execute(pc.commandsOnReplay(), player, placeholders);
+                        }
                         sendGlobalMessage(player, pc.globalMessageOnReplay(), placeholders);
                         sendPlayerMessage(player, pc.playerMessageOnReplay(), placeholders);
                     }
@@ -171,8 +174,11 @@ public class BaseCollectableManager implements CollectableManager {
                    if (!inserted) return false;
                    if (collectable instanceof Discoverable d) d.onDiscover(player);
 
-                   if (collectable instanceof PlayerCollectable pc && pc.commandsOnDiscover() != null) {
-                       commandExecutor.execute(pc.commandsOnDiscover(), player, placeholders);
+                   if (collectable instanceof PlayerCollectable pc) {
+                       log.warn("Do we have disc commands? {}", pc.commandsOnDiscover());
+                       if (pc.commandsOnDiscover() != null) {
+                           commandExecutor.execute(pc.commandsOnDiscover(), player, placeholders);
+                       }
                        sendGlobalMessage(player, pc.globalMessageOnDiscover(), placeholders);
                        sendPlayerMessage(player, pc.playerMessageOnDiscover(), placeholders);
                    }

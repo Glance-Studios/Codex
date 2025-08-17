@@ -26,4 +26,8 @@ public class LineWrapOptions implements ConfigSerializable, LineWrapConfig {
 
     public static final LineWrapOptions DISABLED = new LineWrapOptions(-1, false);
 
+    public static LineWrapOptions from(LineWrapConfig cfg) {
+        return new LineWrapOptions(cfg.maxLineLength(), cfg.breakWords());
+    }
+
 }

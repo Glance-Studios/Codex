@@ -1,5 +1,6 @@
 package com.glance.codex.platform.paper.collectable.type.note;
 
+import com.glance.codex.api.text.PlaceholderService;
 import com.glance.codex.platform.paper.collectable.BaseCollectable;
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigField;
 import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
@@ -14,8 +15,10 @@ public class NoteCollectable extends BaseCollectable {
 
     @Inject
     public NoteCollectable(
-        @NotNull final NotebookRegistry notebookRegistry
+        @NotNull final NotebookRegistry notebookRegistry,
+        @NotNull final PlaceholderService placeholderService
     ) {
+        super(placeholderService);
         this.notebookRegistry = notebookRegistry;
     }
 

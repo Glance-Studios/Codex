@@ -5,12 +5,21 @@ import com.glance.codex.api.collectable.CollectableRepository;
 import com.glance.codex.api.collectable.config.RepositoryConfig;
 import com.glance.codex.api.collectable.config.model.ItemConfig;
 import com.glance.codex.api.text.PlaceholderService;
+import com.glance.codex.platform.paper.config.model.ItemEntry;
 import com.glance.codex.platform.paper.item.ItemBuilder;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import lombok.extern.slf4j.Slf4j;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.nbt.api.BinaryTagHolder;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.event.HoverEventSource;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,6 +36,9 @@ public class BaseCollectableRepository implements CollectableRepository {
     private final ItemConfig selectedIcon;
     private final Map<String, Collectable> entries;
 
+    private final String displayName;
+    private final String plainDisplayName;
+
 
     @Inject
     public BaseCollectableRepository(
@@ -40,11 +52,31 @@ public class BaseCollectableRepository implements CollectableRepository {
         this.namespace = cfg.namespace();
         this.icon = cfg.icon();
         this.selectedIcon = cfg.selectedIcon();
+        this.displayName = cfg.displayName();
+        this.plainDisplayName = cfg.plainDisplayName();
     }
 
     @Override
     public @NotNull String namespace() {
         return namespace;
+    }
+
+    @Override
+    public @NotNull Component displayName() {
+        String resolved = resolver.apply(this.displayName, null);
+        return MiniMessage.miniMessage().deserialize(resolved);
+    }
+
+    @Override
+    public @NotNull String displayNameRaw() {
+        return resolver.apply(this.displayName, null);
+    }
+
+    @Override
+    public @NotNull String plainDisplayName() {
+        return (plainDisplayName == null || plainDisplayName.isBlank())
+                ? PlainTextComponentSerializer.plainText().serialize(displayName())
+                : plainDisplayName;
     }
 
     @Override
@@ -54,12 +86,20 @@ public class BaseCollectableRepository implements CollectableRepository {
 
     @Override
     public @NotNull ItemStack getRepoIcon(@Nullable OfflinePlayer player) {
-        return ItemBuilder.fromConfig(this.icon, player, resolver).build();
+        ItemConfig iconCfg;
+        if (icon.rawDisplayName() == null || icon.rawDisplayName().isBlank()) {
+            iconCfg = ItemEntry.from(icon).name(displayName);
+        } else iconCfg = icon;
+        return ItemBuilder.fromConfig(iconCfg, player, resolver).build();
     }
 
     @Override
     public @NotNull ItemStack getSelectedIcon(@Nullable OfflinePlayer player) {
-        return ItemBuilder.fromConfig(this.selectedIcon, player, resolver).build();
+        ItemConfig iconCfg;
+        if (selectedIcon.rawDisplayName() == null || selectedIcon.rawDisplayName().isBlank()) {
+            iconCfg = ItemEntry.from(selectedIcon).name(displayName);
+        } else iconCfg = selectedIcon;
+        return ItemBuilder.fromConfig(iconCfg, player, resolver).build();
     }
 
     @Override
