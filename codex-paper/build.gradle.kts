@@ -20,6 +20,15 @@ repositories {
     maven("https://repo.triumphteam.dev/snapshots")
     maven("https://jitpack.io")
     maven("https://repo.extendedclip.com/releases/")
+
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/Glance-Studios/CollectableCodexAPI")
+        credentials {
+            username = project.findProperty("gpr.user") as String? ?: System.getenv("GPR_USER")
+            password = project.findProperty("gpr.key") as String? ?: System.getenv("GPR_TOKEN")
+        }
+    }
 }
 
 dependencies {
@@ -27,7 +36,8 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
 
     // Codex API
-    implementation(project(":codex-api"))
+    //implementation(project(":codex-api"))
+    implementation("com.glance.codex:codex-api:1.0.0")
 
     // Menus
     implementation("dev.triumphteam:triumph-gui-paper:4.0.0-SNAPSHOT")
