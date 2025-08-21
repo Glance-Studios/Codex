@@ -3,11 +3,17 @@ package com.glance.codex.platform.paper.menu;
 import com.glance.codex.api.collectable.Collectable;
 import com.glance.codex.api.collectable.CollectableManager;
 import com.glance.codex.api.collectable.CollectableRepository;
+import com.glance.codex.api.collectable.base.PlayerCollectable;
+import com.glance.codex.api.collectable.config.model.command.CommandConfig;
+import com.glance.codex.api.collectable.config.model.command.CommandInfo;
 import com.glance.codex.api.text.PlaceholderService;
+import com.glance.codex.platform.paper.command.executor.CommandExecutorService;
 import com.glance.codex.platform.paper.config.model.ItemEntry;
 import com.glance.codex.platform.paper.item.ItemBuilder;
 import com.glance.codex.platform.paper.menu.config.CollectableMenuConfig;
 import com.glance.codex.platform.paper.menu.config.codec.SlotSpec;
+import com.glance.codex.platform.paper.menu.util.CollectableClick;
+import com.glance.codex.platform.paper.text.PlaceholderUtils;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import dev.triumphteam.gui.container.GuiContainer;
@@ -19,9 +25,9 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.apache.logging.log4j.util.TriConsumer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -29,6 +35,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -68,6 +75,7 @@ public class CollectablesMenu {
     private final CollectableMenuConfig cfg;
     private final PlaceholderService placeholderService;
     private final CollectableManager collectableManager;
+    private final CommandExecutorService commandExecutor;
 
     private final MiniMessage MM = MiniMessage.miniMessage();
 
@@ -76,12 +84,14 @@ public class CollectablesMenu {
             @NotNull final Plugin plugin,
             @NotNull final CollectableMenuConfig cfg,
             @NotNull final PlaceholderService placeholderService,
-            @NotNull final CollectableManager collectableManager
+            @NotNull final CollectableManager collectableManager,
+            @NotNull final CommandExecutorService commandExecutor
     ) {
         this.plugin = plugin;
         this.cfg = cfg;
         this.placeholderService = placeholderService;
         this.collectableManager = collectableManager;
+        this.commandExecutor = commandExecutor;
     }
 
     /**
@@ -186,8 +196,24 @@ public class CollectablesMenu {
         Set<String> unlocked = vm.unlocked(namespace);
         boolean showLoadingBadge = !cached && vm.isLoading(namespace); // TODO: and config flag
 
-        paintEntries(container, player, repo, unlocked, vm.entryPage, showLoadingBadge, (entryId, collectable, slot) -> {
-            // TODO: any click logic
+        paintEntries(container, player, repo, unlocked, vm.entryPage, showLoadingBadge, click -> {
+            if (!click.unlocked()) return;
+            if (!(click.collectable() instanceof PlayerCollectable pc)) return;
+
+            var placeholderBuild = PlaceholderUtils.appendCollectableTags(
+                    new NamespacedKey(namespace, click.entryId()), pc, null);
+            placeholderBuild = PlaceholderUtils.appendPlayerTags(player, placeholderBuild);
+            final Map<String, String> placeholders = placeholderBuild;
+
+            CommandConfig<? extends CommandInfo> runCommand = switch (click.ctx().guiClick()) {
+                case LEFT -> pc.commandsOnMenuLeftClick();
+                case RIGHT -> pc.commandsOnMenuRightClick();
+                case SHIFT_LEFT, SHIFT_RIGHT -> pc.commandsOnMenuShiftClick();
+                default -> null;
+            };
+
+            if (runCommand == null || runCommand.isEmpty() || !runCommand.enabled()) return;
+            this.commandExecutor.execute(runCommand, player, placeholders);
         });
 
         // Fetch only when selecting a repo and it's not cached yet
@@ -259,7 +285,7 @@ public class CollectablesMenu {
             Set<String> unlockedIds,
             MutableState<Integer> entryPage,
             boolean loadingBadge,
-            TriConsumer<String, Collectable, Integer> onClick
+            Consumer<CollectableClick> onClick
     ) {
         var slots = cfg.entrySlots().resolve(cfg.rows());
         if (slots.isEmpty()) return;
@@ -296,7 +322,8 @@ public class CollectablesMenu {
 
             GuiItem<Player, ItemStack> icon = dev.triumphteam.gui.paper.builder.item.ItemBuilder
                 .from(iconItem)
-                .asGuiItem((v, ctx) -> onClick.accept(entryId, c, slot));
+                .asGuiItem((v, ctx) ->
+                        onClick.accept(new CollectableClick(v, entryId, c, slot, isUnlocked, ctx)));
             setAtSlot(container, slot, icon);
         }
 

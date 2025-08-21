@@ -37,7 +37,7 @@ dependencies {
 
     // Codex API
     //implementation(project(":codex-api"))
-    implementation("com.glance.codex:codex-api:1.0.0")
+    implementation("com.glance.codex:codex-api:1.0.2")
 
     // Menus
     implementation("dev.triumphteam:triumph-gui-paper:4.0.0-SNAPSHOT")

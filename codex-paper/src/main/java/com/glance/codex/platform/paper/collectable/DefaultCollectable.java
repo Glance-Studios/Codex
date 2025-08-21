@@ -1,6 +1,8 @@
 package com.glance.codex.platform.paper.collectable;
 
 import com.glance.codex.api.collectable.base.PlayerCollectable;
+import com.glance.codex.api.collectable.config.model.command.CommandConfig;
+import com.glance.codex.api.collectable.config.model.command.CommandInfo;
 import com.glance.codex.api.text.PlaceholderService;
 import com.glance.codex.platform.paper.CodexPlugin;
 import com.glance.codex.api.collectable.CollectableMeta;
@@ -74,6 +76,15 @@ public class DefaultCollectable extends PlayerCollectable implements ConfigSeria
     @ConfigField
     protected String globalMessageOnReplay;
 
+    @ConfigField
+    protected CommandEntry commandsOnMenuLeftClick;
+
+    @ConfigField
+    protected CommandEntry commandsOnMenuRightClick;
+
+    @ConfigField
+    protected CommandEntry commandsOnMenuShiftClick;
+
     @Override public String playerMessageOnReplay() {
         return playerMessageOnReplay != null ? playerMessageOnReplay : playerMessageOnDiscover;
     }
@@ -104,6 +115,11 @@ public class DefaultCollectable extends PlayerCollectable implements ConfigSeria
     @Override
     public CommandEntry commandsOnReplay() {
         return (commandsOnReplay == null || commandsOnReplay().isEmpty()) ? commandsOnDiscover : commandsOnReplay;
+    }
+
+    @Override
+    public @Nullable CommandConfig<? extends CommandInfo> commandsOnShiftClick() {
+        return super.commandsOnShiftClick();
     }
 
     @Override
