@@ -2,15 +2,15 @@ package com.glance.codex.platform.paper.collectable.factory;
 
 import com.glance.codex.api.collectable.Collectable;
 import com.glance.codex.api.collectable.config.RepositoryConfig;
-import com.glance.codex.platform.paper.collectable.BaseCollectableRepository;
+import com.glance.codex.platform.paper.collectable.DefaultCollectableRepository;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-public interface BaseCollectableRepoFactory {
+public interface CollectableRepoFactory {
 
     @NotNull
-    BaseCollectableRepository create(
+    DefaultCollectableRepository create(
         @NotNull RepositoryConfig cfg,
         @NotNull Map<String, Collectable> entries
     );

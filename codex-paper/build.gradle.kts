@@ -108,7 +108,15 @@ configure<PaperPluginDescription> {
     name = "CollectablesCodex"
 
     apiVersion = "1.21"
-    version = "Git-${indraGit.commit()?.name?.take(7) ?: "unknown"}"
+    //version = "Git-${indraGit.commit()?.name?.take(7) ?: "unknown"}"
+    version = "1.0.0"
 
     main = "com.glance.codex.platform.paper.CodexPlugin"
+
+    serverDependencies {
+        create("PlaceholderAPI") {
+            required = false
+            load = PaperPluginDescription.RelativeLoadOrder.AFTER
+        }
+    }
 }

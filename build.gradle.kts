@@ -1,8 +1,8 @@
 plugins {
-    id("io.freefair.lombok") version "8.11" apply false
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.17" apply false
     `java-library`
     java
+    id("io.freefair.lombok") version "8.11" apply false
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.18" apply false
 }
 
 allprojects {

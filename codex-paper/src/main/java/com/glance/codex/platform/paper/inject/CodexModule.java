@@ -5,12 +5,12 @@ import com.glance.codex.api.collectable.CollectableManager;
 import com.glance.codex.api.collectable.CollectableRepository;
 import com.glance.codex.api.data.storage.CollectableStorage;
 import com.glance.codex.api.text.PlaceholderService;
-import com.glance.codex.platform.paper.collectable.BaseCollectableRepository;
+import com.glance.codex.platform.paper.collectable.DefaultCollectableRepository;
 import com.glance.codex.platform.paper.collectable.CollectableApiImpl;
-import com.glance.codex.platform.paper.collectable.factory.BaseCollectableRepoFactory;
-import com.glance.codex.platform.paper.collectable.manager.BaseCollectableManager;
+import com.glance.codex.platform.paper.collectable.factory.CollectableRepoFactory;
+import com.glance.codex.platform.paper.collectable.manager.DefaultCollectableManager;
 import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
-import com.glance.codex.platform.paper.notebooks.book.BaseNotebookRegistry;
+import com.glance.codex.platform.paper.notebooks.book.DefaultNotebookRegistry;
 import com.glance.codex.platform.paper.persistence.config.CollectableStorageProvider;
 import com.glance.codex.platform.paper.text.DefaultPlaceholderService;
 import com.glance.codex.platform.paper.text.PapiPlaceholderService;
@@ -40,8 +40,8 @@ public class CodexModule extends AbstractModule {
                 .toProvider(CollectableStorageProvider.class)
                 .in(Singleton.class);
 
-        this.bind(CollectableManager.class).to(BaseCollectableManager.class).asEagerSingleton();
-        this.bind(NotebookRegistry.class).to(BaseNotebookRegistry.class).asEagerSingleton();
+        this.bind(CollectableManager.class).to(DefaultCollectableManager.class).asEagerSingleton();
+        this.bind(NotebookRegistry.class).to(DefaultNotebookRegistry.class).asEagerSingleton();
 
         if (isPapiPresent()) {
             this.bind(PlaceholderService.class).to(PapiPlaceholderService.class).asEagerSingleton();
@@ -50,8 +50,8 @@ public class CodexModule extends AbstractModule {
         }
 
         this.install(new FactoryModuleBuilder()
-                .implement(CollectableRepository.class, BaseCollectableRepository.class)
-                .build(BaseCollectableRepoFactory.class));
+                .implement(CollectableRepository.class, DefaultCollectableRepository.class)
+                .build(CollectableRepoFactory.class));
 
         this.bind(CollectableAPI.class).to(CollectableApiImpl.class).asEagerSingleton();
     }

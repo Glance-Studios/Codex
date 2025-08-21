@@ -1,7 +1,7 @@
 package com.glance.codex.platform.paper.collectable.type.note;
 
 import com.glance.codex.api.text.PlaceholderService;
-import com.glance.codex.platform.paper.collectable.BaseCollectable;
+import com.glance.codex.platform.paper.collectable.DefaultCollectable;
 import com.glance.codex.platform.paper.config.engine.annotation.ConfigField;
 import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
 import com.google.inject.Inject;
@@ -9,7 +9,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-public class NoteCollectable extends BaseCollectable {
+public class NoteCollectable extends DefaultCollectable {
 
     private final NotebookRegistry notebookRegistry;
 

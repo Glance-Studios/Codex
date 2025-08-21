@@ -6,7 +6,7 @@ import com.glance.codex.api.collectable.config.RepositoryConfig;
 import com.glance.codex.api.data.storage.CollectableStorage;
 import com.glance.codex.api.text.PlaceholderService;
 import com.glance.codex.platform.paper.collectable.config.EntryParser;
-import com.glance.codex.platform.paper.collectable.factory.BaseCollectableRepoFactory;
+import com.glance.codex.platform.paper.collectable.factory.CollectableRepoFactory;
 import com.glance.codex.platform.paper.collectable.type.CollectableTypeRegistry;
 import com.glance.codex.platform.paper.command.executor.CommandExecutorService;
 import com.glance.codex.platform.paper.config.engine.ConfigController;
@@ -35,13 +35,13 @@ import java.util.function.BiFunction;
 @Slf4j
 @Singleton
 @AutoService(Manager.class)
-public class BaseCollectableManager implements CollectableManager {
+public class DefaultCollectableManager implements CollectableManager {
 
     private final Plugin plugin;
     private final Injector injector;
     private final Provider<CollectableStorage> storageProvider;
     private final CommandExecutorService commandExecutor;
-    private final BaseCollectableRepoFactory repositoryFactory;
+    private final CollectableRepoFactory repositoryFactory;
     private final CollectableTypeRegistry typeRegistry;
     private final PlaceholderService placeholderService;
     private final MiniMessage mm = MiniMessage.miniMessage();
@@ -49,14 +49,14 @@ public class BaseCollectableManager implements CollectableManager {
     private final Map<String, CollectableRepository> repositories = new ConcurrentHashMap<>();
 
     @Inject
-    public BaseCollectableManager(
+    public DefaultCollectableManager(
         @NotNull final Plugin plugin,
         @NotNull final Injector injector,
         @NotNull final Provider<CollectableStorage> storage,
         @NotNull final CollectableTypeRegistry typeRegistry,
         @NotNull final PlaceholderService placeholderService,
         @NotNull final CommandExecutorService commandExecutor,
-        @NotNull final BaseCollectableRepoFactory repositoryFactory
+        @NotNull final CollectableRepoFactory repositoryFactory
     ) {
         this.plugin = plugin;
         this.injector = injector;

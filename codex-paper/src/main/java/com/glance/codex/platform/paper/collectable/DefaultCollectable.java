@@ -22,12 +22,12 @@ import org.jetbrains.annotations.Nullable;
 
 @Getter
 @Accessors(fluent = true)
-public class BaseCollectable extends PlayerCollectable implements ConfigSerializable {
+public class DefaultCollectable extends PlayerCollectable implements ConfigSerializable {
 
     private final PlaceholderService placeholderService;
 
     @Inject
-    public BaseCollectable(
+    public DefaultCollectable(
             @NotNull final PlaceholderService placeholderService
     ) {
         this.placeholderService = placeholderService;

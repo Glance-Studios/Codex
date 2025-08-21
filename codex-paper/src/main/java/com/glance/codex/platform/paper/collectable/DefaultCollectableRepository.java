@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 
 @Slf4j
-public class BaseCollectableRepository implements CollectableRepository {
+public class DefaultCollectableRepository implements CollectableRepository {
 
     private final PlaceholderService resolver;
 
@@ -36,7 +36,7 @@ public class BaseCollectableRepository implements CollectableRepository {
 
 
     @Inject
-    public BaseCollectableRepository(
+    public DefaultCollectableRepository(
         @Assisted final RepositoryConfig cfg,
         @Assisted final Map<String, Collectable> entries,
         @NotNull final PlaceholderService resolver

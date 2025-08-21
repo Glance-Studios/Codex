@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Singleton
 @AutoService(Manager.class)
-public class BaseNotebookRegistry implements Manager, NotebookRegistry {
+public class DefaultNotebookRegistry implements Manager, NotebookRegistry {
 
     private final Plugin plugin;
     private final NoteBookRenderService renderService;
@@ -29,7 +29,7 @@ public class BaseNotebookRegistry implements Manager, NotebookRegistry {
     private final Map<NamespacedKey, BookConfig> byKey = new ConcurrentHashMap<>();
 
     @Inject
-    public BaseNotebookRegistry(
+    public DefaultNotebookRegistry(
             @NotNull final Plugin plugin,
             @NotNull final NoteBookRenderService renderService
     ) {
