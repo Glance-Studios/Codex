@@ -151,21 +151,7 @@ public class DefaultCollectableManager implements CollectableManager {
 
         return storage.isUnlocked(uuid, ns, id).thenCompose(unlocked -> {
             if (unlocked) {
-                // Replay
-                if (!collectable.allowReplay()) return CompletableFuture.completedFuture(false);
-                long now = System.currentTimeMillis();
-                return storage.recordReplay(uuid, ns, id, now).thenApply(v -> {
-                    if (collectable instanceof Discoverable d) d.onReplay(player);
-
-                    if (collectable instanceof PlayerCollectable pc) {
-                        if (pc.commandsOnReplay() != null) {
-                            this.commandExecutor.execute(pc.commandsOnReplay(), player, placeholders);
-                        }
-                        sendGlobalMessage(player, pc.globalMessageOnReplay(), placeholders);
-                        sendPlayerMessage(player, pc.playerMessageOnReplay(), placeholders);
-                    }
-                    return true;
-                });
+                return performReplay(player, uuid, ns, id, collectable, placeholders);
             } else {
                 // First unlock
                 long now = System.currentTimeMillis();
@@ -187,6 +173,40 @@ public class DefaultCollectableManager implements CollectableManager {
             plugin.getLogger().severe("[Collectables] Unlock failed for " + uuid +
                     " " + ns + ":" + id + " - " + ex);
            return false;
+        });
+    }
+
+    private CompletableFuture<Boolean> performReplay(
+        @NotNull Player player,
+        @NotNull UUID uuid,
+        @NotNull String ns,
+        @NotNull String id,
+        @NotNull Collectable collectable,
+        @NotNull Map<String, String> placeholders
+    ) {
+        if (!collectable.allowReplay()) {
+            return CompletableFuture.completedFuture(false);
+        }
+
+        final long now = System.currentTimeMillis();
+
+        CompletableFuture<Void> storeStage;
+        if (collectable.trackReplays()) {
+            storeStage = storageProvider.get().recordReplay(uuid, ns, id, now);
+        } else {
+            storeStage = CompletableFuture.completedFuture(null);
+        }
+
+        return storeStage.thenApply(v -> {
+           if (collectable instanceof Discoverable d) d.onReplay(player);
+           if (collectable instanceof PlayerCollectable pc) {
+               if (pc.commandsOnReplay() != null && !pc.commandsOnReplay().isEmpty()) {
+                   this.commandExecutor.execute(pc.commandsOnReplay(), player, placeholders);
+               }
+               sendGlobalMessage(player, pc.globalMessageOnReplay(), placeholders);
+               sendPlayerMessage(player, pc.playerMessageOnReplay(), placeholders);
+           }
+           return true;
         });
     }
 

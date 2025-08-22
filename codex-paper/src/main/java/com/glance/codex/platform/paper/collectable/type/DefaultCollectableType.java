@@ -13,7 +13,7 @@ public class DefaultCollectableType implements CollectableType {
 
     @Override
     public @NotNull String id() {
-        return "default";
+        return "base";
     }
 
     @Override

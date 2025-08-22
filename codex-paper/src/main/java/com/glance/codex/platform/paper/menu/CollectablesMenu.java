@@ -199,9 +199,18 @@ public class CollectablesMenu {
         paintEntries(container, player, repo, unlocked, vm.entryPage, showLoadingBadge, click -> {
             if (!click.unlocked()) return;
             if (!(click.collectable() instanceof PlayerCollectable pc)) return;
+            NamespacedKey key = new NamespacedKey(namespace, click.entryId());
 
-            var placeholderBuild = PlaceholderUtils.appendCollectableTags(
-                    new NamespacedKey(namespace, click.entryId()), pc, null);
+            if (pc.replayOnClick()) {
+                this.collectableManager.unlock(player, key)
+                        .exceptionally(ex -> {
+                            plugin.getLogger().severe("[Collectables] Replay-on-click failed " +
+                                    "for " + player.getUniqueId() + " " + key.asString());
+                            return false;
+                        });
+            }
+
+            var placeholderBuild = PlaceholderUtils.appendCollectableTags(key, pc, null);
             placeholderBuild = PlaceholderUtils.appendPlayerTags(player, placeholderBuild);
             final Map<String, String> placeholders = placeholderBuild;
 

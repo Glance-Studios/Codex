@@ -1,8 +1,6 @@
 package com.glance.codex.platform.paper.collectable;
 
 import com.glance.codex.api.collectable.base.PlayerCollectable;
-import com.glance.codex.api.collectable.config.model.command.CommandConfig;
-import com.glance.codex.api.collectable.config.model.command.CommandInfo;
 import com.glance.codex.api.text.PlaceholderService;
 import com.glance.codex.platform.paper.CodexPlugin;
 import com.glance.codex.api.collectable.CollectableMeta;
@@ -47,10 +45,16 @@ public class DefaultCollectable extends PlayerCollectable implements ConfigSeria
     protected String plainDisplayName;
 
     @ConfigField
-    protected boolean showWhenLocked;
+    protected Boolean showWhenLocked;
 
     @ConfigField
-    protected boolean allowReplay;
+    protected Boolean allowReplay;
+
+    @ConfigField
+    protected Boolean trackReplays;
+
+    @ConfigField
+    protected Boolean replayOnClick;
 
     @ConfigField
     protected ItemEntry unlockedIcon;
@@ -85,6 +89,30 @@ public class DefaultCollectable extends PlayerCollectable implements ConfigSeria
     @ConfigField
     protected CommandEntry commandsOnMenuShiftClick;
 
+    /* Replay Defaults */
+
+    @Override
+    public boolean showWhenLocked() {
+        return (showWhenLocked == null || showWhenLocked);
+    }
+
+    @Override
+    public boolean allowReplay() {
+        return (allowReplay == null || allowReplay);
+    }
+
+    @Override
+    public boolean trackReplays() {
+        return Boolean.TRUE.equals(trackReplays);
+    }
+
+    @Override
+    public boolean replayOnClick() {
+        return (replayOnClick == null || replayOnClick);
+    }
+
+    /* Messages */
+
     @Override public String playerMessageOnReplay() {
         return playerMessageOnReplay != null ? playerMessageOnReplay : playerMessageOnDiscover;
     }
@@ -92,6 +120,8 @@ public class DefaultCollectable extends PlayerCollectable implements ConfigSeria
     @Override public String globalMessageOnReplay() {
         return globalMessageOnReplay != null ? globalMessageOnReplay : globalMessageOnDiscover;
     }
+
+    /* Display Name */
 
     @Override
     public @NotNull Component displayName() {
@@ -112,15 +142,30 @@ public class DefaultCollectable extends PlayerCollectable implements ConfigSeria
         return placeholderService.apply(plainDisplayName, null);
     }
 
+    /* Commands */
+
     @Override
     public CommandEntry commandsOnReplay() {
-        return (commandsOnReplay == null || commandsOnReplay().isEmpty()) ? commandsOnDiscover : commandsOnReplay;
+        return (commandsOnReplay == null)
+                ? commandsOnDiscover
+                : commandsOnReplay;
     }
 
     @Override
-    public @Nullable CommandConfig<? extends CommandInfo> commandsOnShiftClick() {
-        return super.commandsOnShiftClick();
+    public @Nullable CommandEntry commandsOnMenuRightClick() {
+        return (commandsOnMenuRightClick == null)
+                ? commandsOnMenuLeftClick
+                : commandsOnMenuRightClick;
     }
+
+    @Override
+    public @Nullable CommandEntry commandsOnMenuShiftClick() {
+        return (commandsOnMenuShiftClick == null)
+                ? commandsOnMenuLeftClick
+                : commandsOnMenuShiftClick;
+    }
+
+    /* Icon */
 
     @Override
     public @NotNull ItemStack iconUnlocked(@Nullable OfflinePlayer player) {
@@ -136,16 +181,6 @@ public class DefaultCollectable extends PlayerCollectable implements ConfigSeria
             lockedIcon.displayName("<dark_gray>???");
         }
         return ItemBuilder.fromConfig(lockedIcon, player, CodexPlugin.getInstance().placeholderService()).build();
-    }
-
-    @Override
-    public boolean showWhenLocked() {
-        return showWhenLocked;
-    }
-
-    @Override
-    public boolean allowReplay() {
-        return allowReplay;
     }
 
     @Override

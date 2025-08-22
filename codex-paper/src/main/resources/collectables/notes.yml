@@ -31,3 +31,13 @@ entries:
     lockedIcon:
       material: MAP
       displayName: "<dark_gray>???"
+    commandsOnMenuLeftClick:
+      enabled: true
+      commands:
+        - runAs: PLAYER
+          command: "say I left-clicked the parchment"
+    commandsOnMenuRightClick:
+      enabled: true
+      commands:
+        - runAs: PLAYER
+          command: "say I right-clicked the parchment"
