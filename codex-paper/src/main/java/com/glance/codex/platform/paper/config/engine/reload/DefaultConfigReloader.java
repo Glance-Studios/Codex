@@ -88,10 +88,17 @@ public class DefaultConfigReloader implements ConfigReloader {
         });
     }
 
+    private boolean isHotReloadableClass(Class<?> cls) {
+        Config meta = cls.getAnnotation(Config.class);
+        return meta == null || meta.supportHotReload();
+    }
+
     @Override
     public CompletableFuture<ReloadSummary> reloadAll() {
         Map<Class<?>, List<Config.Handler>> byClass = ConfigController.allInstances()
-                .stream().collect(Collectors.groupingBy(Object::getClass));
+                .stream()
+                .filter(h -> isHotReloadableClass(h.getClass()))
+                .collect(Collectors.groupingBy(Object::getClass));
 
         List<CompletableFuture<ReloadSummary>> tasks = new ArrayList<>();
         for (Class<?> cls : byClass.keySet()) {

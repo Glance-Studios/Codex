@@ -274,7 +274,7 @@ public class DefaultCollectableManager implements CollectableManager, Listener {
     @EventHandler
     public void onRepositoriesReloaded(ConfigClassReloadEvent event) {
         if (!CollectableRepositoryConfig.class.isAssignableFrom(event.configClass())) return;
-        
+
         this.clear();
 
         List<CollectableRepositoryConfig> repoConfigs = event.instances().stream()
