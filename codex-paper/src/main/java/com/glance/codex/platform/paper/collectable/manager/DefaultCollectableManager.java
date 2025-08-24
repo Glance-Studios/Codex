@@ -5,11 +5,13 @@ import com.glance.codex.api.collectable.base.PlayerCollectable;
 import com.glance.codex.api.collectable.config.RepositoryConfig;
 import com.glance.codex.api.data.storage.CollectableStorage;
 import com.glance.codex.api.text.PlaceholderService;
+import com.glance.codex.platform.paper.collectable.config.CollectableRepositoryConfig;
 import com.glance.codex.platform.paper.collectable.config.EntryParser;
 import com.glance.codex.platform.paper.collectable.factory.CollectableRepoFactory;
 import com.glance.codex.platform.paper.collectable.type.CollectableTypeRegistry;
 import com.glance.codex.platform.paper.command.executor.CommandExecutorService;
 import com.glance.codex.platform.paper.config.engine.ConfigController;
+import com.glance.codex.platform.paper.config.engine.event.ConfigClassReloadEvent;
 import com.glance.codex.platform.paper.text.PlaceholderUtils;
 import com.glance.codex.utils.lifecycle.Manager;
 import com.google.auto.service.AutoService;
@@ -23,6 +25,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,8 +38,8 @@ import java.util.function.BiFunction;
 
 @Slf4j
 @Singleton
-@AutoService(Manager.class)
-public class DefaultCollectableManager implements CollectableManager {
+@AutoService({Manager.class, Listener.class})
+public class DefaultCollectableManager implements CollectableManager, Listener {
 
     private final Plugin plugin;
     private final Injector injector;
@@ -256,6 +260,27 @@ public class DefaultCollectableManager implements CollectableManager {
     @Override
     public CompletableFuture<Void> clearAll(@NotNull Player player) {
         return storageProvider.get().clearAll(player.getUniqueId());
+    }
+
+    private void clear() {
+        this.repositories.clear();
+    }
+
+    @Override
+    public void onDisable() {
+        this.clear();
+    }
+
+    @EventHandler
+    public void onRepositoriesReloaded(ConfigClassReloadEvent event) {
+        if (!CollectableRepositoryConfig.class.isAssignableFrom(event.configClass())) return;
+        
+        this.clear();
+
+        List<CollectableRepositoryConfig> repoConfigs = event.instances().stream()
+                        .map(h -> (CollectableRepositoryConfig) h).toList();
+
+        repoConfigs.forEach(this::loadFromConfig);
     }
 
 }

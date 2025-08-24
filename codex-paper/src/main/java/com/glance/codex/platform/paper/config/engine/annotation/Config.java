@@ -2,6 +2,7 @@ package com.glance.codex.platform.paper.config.engine.annotation;
 
 import com.glance.codex.platform.paper.config.engine.ConfigController;
 import com.glance.codex.platform.paper.config.engine.format.ConfigFormat;
+import com.glance.codex.platform.paper.config.engine.reload.ReloadResult;
 
 import java.io.File;
 import java.lang.annotation.ElementType;
@@ -19,6 +20,10 @@ public @interface Config {
     ConfigFormat.Type format() default ConfigFormat.Type.YAML;
     /** top-level section (empty = root) */
     String section() default "";
+
+    /** key-name for this annotated class (defaults to simple class name) */
+    String classKey() default "";
+
     /** copy resource + write defaults on first load? */
     boolean writeDefaults() default true;
     /**
@@ -26,6 +31,9 @@ public @interface Config {
      * load everything from plugin.getConfig()
      */
     boolean usePluginConfig() default false;
+
+    /** Whether this config class supports hot reloading */
+    boolean supportHotReload() default true;
 
     /**
      * When fileName contains "/**", this limits recursion depth
@@ -63,8 +71,8 @@ public @interface Config {
         /**
          * Reloads the config file into the stored section and pulls into the instance
          */
-        default void reload() {
-            ConfigController.reload(this);
+        default ReloadResult reload() {
+            return ConfigController.reload(this);
         }
 
         /**

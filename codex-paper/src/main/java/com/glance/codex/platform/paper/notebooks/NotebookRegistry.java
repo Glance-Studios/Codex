@@ -1,6 +1,7 @@
 package com.glance.codex.platform.paper.notebooks;
 
 import com.glance.codex.platform.paper.config.model.BookConfig;
+import com.glance.codex.utils.lifecycle.Manager;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -8,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Map;
 import java.util.Optional;
 
-public interface NotebookRegistry {
+public interface NotebookRegistry extends Manager {
 
     /**
      * @return immutable view of all loaded book keyed by id
@@ -62,10 +63,5 @@ public interface NotebookRegistry {
     ) {
         return open(new NamespacedKey(namespace, id), player);
     }
-
-    /**
-     * Reload from disk
-     */
-    void reload();
 
 }

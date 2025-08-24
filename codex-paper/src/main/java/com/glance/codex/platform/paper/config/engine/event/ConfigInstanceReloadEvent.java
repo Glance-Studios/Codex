@@ -1,39 +1,39 @@
 package com.glance.codex.platform.paper.config.engine.event;
 
 import com.glance.codex.platform.paper.config.engine.annotation.Config;
+import com.glance.codex.platform.paper.config.engine.reload.ReloadResult;
+import lombok.Getter;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
-public class ConfigReloadEvent extends ConfigEvent {
+public class ConfigInstanceReloadEvent extends ConfigEvent {
 
     private static final HandlerList handlers = new HandlerList();
 
-    private final boolean sectionChanged;
-    private final boolean fieldsChanged;
+    @Getter
+    private final ReloadResult result;
 
-    public ConfigReloadEvent(
-        @NotNull Class<?> configClass,
-        @NotNull Config.Handler instance,
-        boolean sectionChanged,
-        boolean fieldsChanged
-    ) {
+    public ConfigInstanceReloadEvent(
+            @NotNull Class<?> configClass,
+            @NotNull Config.Handler instance,
+            @NotNull ReloadResult result
+            ) {
         super(configClass, instance);
-        this.sectionChanged = sectionChanged;
-        this.fieldsChanged = fieldsChanged;
+        this.result = result;
     }
 
     /**
      * @return {@code true} if the config file contents (backing section) were reloaded and changed
      */
     public boolean causedSectionChanges() {
-        return sectionChanged;
+        return result.sectionChanged();
     }
 
     /**
      * @return {@code true} if reloading caused updates to the instances fields
      */
     public boolean causedFieldsChanges() {
-        return fieldsChanged;
+        return result.fieldsChanged();
     }
 
     @Override

@@ -9,13 +9,13 @@ import com.glance.codex.platform.paper.config.engine.codec.ConfigSerializable;
 import com.glance.codex.platform.paper.config.engine.codec.base.*;
 import com.glance.codex.platform.paper.config.engine.event.ConfigLoadEvent;
 import com.glance.codex.platform.paper.config.engine.event.ConfigPushEvent;
-import com.glance.codex.platform.paper.config.engine.event.ConfigReloadEvent;
 import com.glance.codex.platform.paper.config.engine.event.ConfigSaveEvent;
 import com.glance.codex.platform.paper.config.engine.exception.ConfigLoadException;
 import com.glance.codex.platform.paper.config.engine.exception.ConfigSaveException;
 import com.glance.codex.platform.paper.config.engine.exception.ConfigValidationException;
 import com.glance.codex.platform.paper.config.engine.format.ConfigFormat;
 import com.glance.codex.platform.paper.config.engine.format.impl.YamlConfigFormat;
+import com.glance.codex.platform.paper.config.engine.reload.ReloadResult;
 import com.glance.codex.platform.paper.menu.config.codec.SlotSpec;
 import com.glance.codex.platform.paper.menu.config.codec.SlotSpecCodec;
 import com.glance.codex.utils.data.TypeCodec;
@@ -40,6 +40,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Central lifecycle loader, and codec bridge for config beans using {@link Config} and {@link ConfigPath}
@@ -65,6 +66,21 @@ public final class ConfigController {
     private final static Map<ConfigFormat.Type, ConfigFormat> formatHandlers = Map.of(
             ConfigFormat.Type.YAML, new YamlConfigFormat()
     );
+
+    public static synchronized Set<Config.Handler> instancesOf(Class<?> type) {
+        return INSTANCE_SECTIONS.keySet()
+                .stream()
+                .filter(type::isInstance)
+                .map(h -> (Config.Handler) h)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    public static synchronized Set<Config.Handler> allInstances() {
+        return Set.copyOf(INSTANCE_SECTIONS.keySet())
+                .stream()
+                .map(h -> (Config.Handler) h)
+                .collect(Collectors.toUnmodifiableSet());
+    }
 
     @SuppressWarnings("unchecked")
     public static void init() {
@@ -341,19 +357,22 @@ public final class ConfigController {
     }
 
     /**
-     * Reloads the associated config file values into the instance and its associated
-     * {@link ConfigurationSection}
-     *
-     * @param instance the config bean
+     * Reloads *this instance* from its associated file + section
+     * <p>
+     * Uses INSTANCE_FILES / INSTANCE_SECTIONS, not the class maps
      */
-    public static void reload(Config.Handler instance) {
+    public static ReloadResult reload(Config.Handler instance) {
         Class<?> cls = instance.getClass();
         Config meta = cls.getAnnotation(Config.class);
         if (meta == null) {
             throw new ConfigLoadException("Missing @Config annotation for " + cls.getSimpleName());
         }
 
-        File file = configFiles.get(cls);
+        if (!meta.supportHotReload()) {
+            throw new ConfigLoadException("Config Class " + classKeyFor(cls) + " does not support hot reloads");
+        }
+
+        File file = INSTANCE_FILES.get(instance);
         if (file == null || !file.exists()) {
             throw new ConfigLoadException("No config file found for " + cls.getSimpleName());
         }
@@ -367,19 +386,19 @@ public final class ConfigController {
             ConfigurationSection section = formatHandler.load(file, meta.section());
 
             // Compare to old section for change detection
-            ConfigurationSection oldSection = loadedSections.get(cls);
+            ConfigurationSection oldSection = INSTANCE_SECTIONS.get(instance);
             boolean sectionChanged = !Objects.equals(section, oldSection); // might need deeper?
 
-            loadedSections.put(cls, section);
+            INSTANCE_SECTIONS.put(instance, section);
 
             boolean fieldsChanged = syncFields(instance, section, true, meta.writeDefaults());
 
-            // Call event
-            new ConfigReloadEvent(cls, instance, sectionChanged, fieldsChanged).callEvent();
+            return new ReloadResult(file, section, sectionChanged, fieldsChanged);
         } catch (Exception e) {
             throw new ConfigLoadException("Failed to reload config for " + cls.getSimpleName(), e);
         }
     }
+
 
     // TODO: this should be cleaned up in a final config lib
     @SuppressWarnings("unchecked")
@@ -541,6 +560,23 @@ public final class ConfigController {
     ) {
         TypeCodec<X> cast = (TypeCodec<X>) codec;
         return cast.decode(section, path, fieldType, defaultValue);
+    }
+
+    public static Optional<Class<? extends Config.Handler>> resolveClassByKey(@NotNull String key) {
+        for (Config.Handler h : ConfigController.allInstances()) {
+            Class<? extends Config.Handler> c = h.getClass();
+            String k = classKeyFor(c);
+            if (k.equalsIgnoreCase(key) || c.getSimpleName().equalsIgnoreCase(key)) {
+                return Optional.of(c);
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static String classKeyFor(@NotNull Class<?> cls) {
+        Config meta = cls.getAnnotation(Config.class);
+        if (meta != null && !meta.classKey().isBlank()) return meta.classKey();
+        return cls.getSimpleName();
     }
 
     /**

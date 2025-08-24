@@ -36,16 +36,13 @@ public class NoteBookConfigLoader {
      *   <li>Namespace is config {@code namespace} or derived from the file path after {@code notes/}</li>
      * </ul>
      *
-     * @param injector DI injector used to obtain {@link NotebookRegistry}
+     * @param registry {@link NotebookRegistry} for book registration
      * @param configs  resolved notebook configs (each with an associated {@code filePath})
      */
     public void handleNoteBooks(
-        @NotNull Injector injector,
+        @NotNull NotebookRegistry registry,
         @NotNull List<NoteBookConfig> configs
     ) {
-        final NotebookRegistry registry = injector.getInstance(NotebookRegistry.class);
-        if (registry == null) return;
-
         for (NoteBookConfig cfg : configs) {
             Path path = cfg.filePath();
 

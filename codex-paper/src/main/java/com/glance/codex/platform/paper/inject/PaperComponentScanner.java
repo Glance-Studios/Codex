@@ -10,6 +10,7 @@ import com.glance.codex.platform.paper.command.engine.CommandManager;
 import com.glance.codex.platform.paper.command.engine.argument.TypedArgParser;
 import com.glance.codex.platform.paper.config.engine.ConfigController;
 import com.glance.codex.platform.paper.config.engine.annotation.Config;
+import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
 import com.glance.codex.platform.paper.notebooks.config.NoteBookConfig;
 import com.glance.codex.platform.paper.collectable.type.CollectableTypeRegistry;
 import com.glance.codex.platform.paper.notebooks.config.NoteBookConfigLoader;
@@ -117,17 +118,20 @@ public class PaperComponentScanner {
         }
 
         // Scan NoteBook configs
-        for (Class<? extends Config.Handler> clazz : GuiceServiceLoader.load(Config.Handler.class, classLoader)) {
-            try {
-                if (!NoteBookConfig.class.isAssignableFrom(clazz)) continue;
+        NotebookRegistry notebookRegistry = injector.getInstance(NotebookRegistry.class);
+        if (notebookRegistry != null) {
+            for (Class<? extends Config.Handler> clazz : GuiceServiceLoader.load(Config.Handler.class, classLoader)) {
+                try {
+                    if (!NoteBookConfig.class.isAssignableFrom(clazz)) continue;
 
-                Class<NoteBookConfig> typedClass = (Class<NoteBookConfig>) clazz;
-                List<NoteBookConfig> noteConfigs = ConfigController
-                        .loadByPattern(typedClass, plugin.getDataFolder(), injector);
+                    Class<NoteBookConfig> typedClass = (Class<NoteBookConfig>) clazz;
+                    List<NoteBookConfig> noteConfigs = ConfigController
+                            .loadByPattern(typedClass, plugin.getDataFolder(), injector);
 
-                NoteBookConfigLoader.handleNoteBooks(injector, noteConfigs);
-            } catch (Exception e) {
-                logError(logger, "loading notebook configs", clazz, e);
+                    NoteBookConfigLoader.handleNoteBooks(notebookRegistry, noteConfigs);
+                } catch (Exception e) {
+                    logError(logger, "loading notebook configs", clazz, e);
+                }
             }
         }
 

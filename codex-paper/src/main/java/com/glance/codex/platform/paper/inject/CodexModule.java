@@ -9,6 +9,8 @@ import com.glance.codex.platform.paper.collectable.DefaultCollectableRepository;
 import com.glance.codex.platform.paper.collectable.CollectableApiImpl;
 import com.glance.codex.platform.paper.collectable.factory.CollectableRepoFactory;
 import com.glance.codex.platform.paper.collectable.manager.DefaultCollectableManager;
+import com.glance.codex.platform.paper.config.engine.reload.ConfigReloader;
+import com.glance.codex.platform.paper.config.engine.reload.DefaultConfigReloader;
 import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
 import com.glance.codex.platform.paper.notebooks.book.DefaultNotebookRegistry;
 import com.glance.codex.platform.paper.persistence.config.CollectableStorageProvider;
@@ -36,12 +38,11 @@ public class CodexModule extends AbstractModule {
         this.bind(Plugin.class).toInstance(plugin);
         this.bind(JavaPlugin.class).toInstance((JavaPlugin) plugin);
 
-        bind(CollectableStorage.class)
-                .toProvider(CollectableStorageProvider.class)
-                .in(Singleton.class);
-
+        this.bind(ConfigReloader.class).to(DefaultConfigReloader.class).asEagerSingleton();
         this.bind(CollectableManager.class).to(DefaultCollectableManager.class).asEagerSingleton();
         this.bind(NotebookRegistry.class).to(DefaultNotebookRegistry.class).asEagerSingleton();
+
+        this.bind(CollectableStorage.class).toProvider(CollectableStorageProvider.class).in(Singleton.class);
 
         if (isPapiPresent()) {
             this.bind(PlaceholderService.class).to(PapiPlaceholderService.class).asEagerSingleton();

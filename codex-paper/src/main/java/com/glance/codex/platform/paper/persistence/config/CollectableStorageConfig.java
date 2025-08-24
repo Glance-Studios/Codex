@@ -10,10 +10,10 @@ import lombok.experimental.Accessors;
 
 @Data
 @Accessors(fluent = true)
-@Config(section = "storage")
 @AutoService(Config.Handler.class)
 @ToString
 @Singleton
+@Config(section = "storage", supportHotReload = false)
 public class CollectableStorageConfig implements Config.Handler {
 
     @ConfigPath("backend") private Backend backend = Backend.FLATFILE;

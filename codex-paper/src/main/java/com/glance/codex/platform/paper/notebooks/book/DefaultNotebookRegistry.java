@@ -1,27 +1,34 @@
 package com.glance.codex.platform.paper.notebooks.book;
 
+import com.glance.codex.platform.paper.config.engine.event.ConfigClassReloadEvent;
 import com.glance.codex.platform.paper.config.model.BookConfig;
 import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
+import com.glance.codex.platform.paper.notebooks.config.NoteBookConfig;
+import com.glance.codex.platform.paper.notebooks.config.NoteBookConfigLoader;
 import com.glance.codex.utils.lifecycle.Manager;
 import com.google.auto.service.AutoService;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Singleton
-@AutoService(Manager.class)
-public class DefaultNotebookRegistry implements Manager, NotebookRegistry {
+@AutoService({Manager.class, Listener.class})
+public class DefaultNotebookRegistry implements Listener, NotebookRegistry {
 
     private final Plugin plugin;
     private final NoteBookRenderService renderService;
@@ -92,6 +99,23 @@ public class DefaultNotebookRegistry implements Manager, NotebookRegistry {
     }
 
     @Override
-    public void reload() {}
+    public void onDisable() {
+        clear();
+    }
+
+    public void clear() {
+        this.byKey.clear();
+    }
+
+    @EventHandler
+    public void onNotebooksReload(ConfigClassReloadEvent event) {
+        if (!NoteBookConfig.class.isAssignableFrom(event.configClass())) return;
+        clear();
+
+        List<NoteBookConfig> noteConfigs = event.instances()
+                .stream().map(h -> (NoteBookConfig) h).toList();
+
+        NoteBookConfigLoader.handleNoteBooks(this, noteConfigs);
+    }
 
 }
