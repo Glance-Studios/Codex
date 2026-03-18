@@ -27,3 +27,4 @@ run/
 local.properties
 
 .kotlin/
+/target

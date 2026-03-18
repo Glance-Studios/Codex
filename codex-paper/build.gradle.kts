@@ -64,7 +64,7 @@ dependencies { sqlite(libs.sqlite) }
 
 val shadowWithSQLite by tasks.registering(ShadowJar::class) {
     group = "build"
-    archiveClassifier.set("-sqlite")
+    archiveClassifier.set("sqlite")
     from(sourceSets.main.get().output)
     configurations = listOf(project.configurations.runtimeClasspath.get(), sqlite)
     minimize()
