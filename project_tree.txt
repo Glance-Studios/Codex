@@ -1,0 +1,202 @@
+./
+└── ./
+    ├── codex-api/
+    │   ├── src.main.java.com.glance.codex/
+    │   │   ├── api/
+    │   │   │   ├── collectable/
+    │   │   │   │   ├── base/
+    │   │   │   │   │   └── PlayerCollectable.java
+    │   │   │   │   ├── config/
+    │   │   │   │   │   ├── model/
+    │   │   │   │   │   │   ├── command/
+    │   │   │   │   │   │   │   ├── CommandConfig.java
+    │   │   │   │   │   │   │   └── CommandInfo.java
+    │   │   │   │   │   │   ├── ItemConfig.java
+    │   │   │   │   │   │   └── LineWrapConfig.java
+    │   │   │   │   │   └── RepositoryConfig.java
+    │   │   │   │   ├── type/
+    │   │   │   │   │   └── CollectableType.java
+    │   │   │   │   ├── Collectable.java
+    │   │   │   │   ├── CollectableAPI.java
+    │   │   │   │   ├── CollectableManager.java
+    │   │   │   │   ├── CollectableMeta.java
+    │   │   │   │   ├── CollectableRepository.java
+    │   │   │   │   └── Discoverable.java
+    │   │   │   ├── data/
+    │   │   │   │   ├── storage/
+    │   │   │   │   │   └── CollectableStorage.java
+    │   │   │   │   └── PlayerCollectables.java
+    │   │   │   ├── event/
+    │   │   │   │   ├── CodexReadyEvent.java
+    │   │   │   │   ├── CollectableEvent.java
+    │   │   │   │   ├── CollectableReplayEvent.java
+    │   │   │   │   └── CollectableUnlockEvent.java
+    │   │   │   └── text/
+    │   │   │       ├── PlaceholderService.java
+    │   │   │       └── PlaceholderSource.java
+    │   │   ├── utils/
+    │   │   │   ├── data/
+    │   │   │   │   ├── NoOpConverter.java
+    │   │   │   │   ├── NoOpValidator.java
+    │   │   │   │   ├── Pair.java
+    │   │   │   │   ├── TypeCodec.java
+    │   │   │   │   ├── TypeConverter.java
+    │   │   │   │   └── Validator.java
+    │   │   │   ├── format/
+    │   │   │   │   └── StringUtils.java
+    │   │   │   ├── io/
+    │   │   │   │   └── FileUtils.java
+    │   │   │   ├── item/
+    │   │   │   │   └── LoreMergeMode.java
+    │   │   │   └── lifecycle/
+    │   │   │       ├── Manager.java
+    │   │   │       └── ReflectionUtils.java
+    │   │   └── Codex.java
+    │   └── build.gradle.kts
+    ├── codex-paper/
+    │   ├── src.main/
+    │   │   ├── java.com.glance.codex/
+    │   │   │   ├── bootstrap/
+    │   │   │   │   └── GuiceServiceLoader.java
+    │   │   │   └── platform.paper/
+    │   │   │       ├── collectable/
+    │   │   │       │   ├── config/
+    │   │   │       │   │   ├── CollectableRepositoryConfig.java
+    │   │   │       │   │   └── EntryParser.java
+    │   │   │       │   ├── factory/
+    │   │   │       │   │   └── CollectableRepoFactory.java
+    │   │   │       │   ├── manager/
+    │   │   │       │   │   └── DefaultCollectableManager.java
+    │   │   │       │   ├── type/
+    │   │   │       │   │   ├── note/
+    │   │   │       │   │   │   ├── NoteCollectable.java
+    │   │   │       │   │   │   └── NoteCollectableType.java
+    │   │   │       │   │   ├── CollectableTypeRegistry.java
+    │   │   │       │   │   └── DefaultCollectableType.java
+    │   │   │       │   ├── CollectableApiImpl.java
+    │   │   │       │   ├── DefaultCollectable.java
+    │   │   │       │   └── DefaultCollectableRepository.java
+    │   │   │       ├── command/
+    │   │   │       │   ├── core/
+    │   │   │       │   │   ├── CollectionsCommand.java
+    │   │   │       │   │   ├── NotesCommand.java
+    │   │   │       │   │   └── ReloadCommand.java
+    │   │   │       │   ├── engine/
+    │   │   │       │   │   ├── argument/
+    │   │   │       │   │   │   └── TypedArgParser.java
+    │   │   │       │   │   ├── suggestion/
+    │   │   │       │   │   │   └── SuggestionHelpers.java
+    │   │   │       │   │   ├── CommandHandler.java
+    │   │   │       │   │   └── CommandManager.java
+    │   │   │       │   └── executor/
+    │   │   │       │       └── CommandExecutorService.java
+    │   │   │       ├── config/
+    │   │   │       │   ├── engine/
+    │   │   │       │   │   ├── annotation/
+    │   │   │       │   │   │   ├── Config.java
+    │   │   │       │   │   │   ├── ConfigField.java
+    │   │   │       │   │   │   └── ConfigPath.java
+    │   │   │       │   │   ├── codec/
+    │   │   │       │   │   │   ├── base/
+    │   │   │       │   │   │   │   ├── BukkitCodec.java
+    │   │   │       │   │   │   │   ├── CollectionCodecs.java
+    │   │   │       │   │   │   │   ├── ConfigSerializableCodec.java
+    │   │   │       │   │   │   │   ├── EnumCodec.java
+    │   │   │       │   │   │   │   ├── PrimitiveCodecs.java
+    │   │   │       │   │   │   │   ├── SectionCodec.java
+    │   │   │       │   │   │   │   └── StringMapCodec.java
+    │   │   │       │   │   │   ├── CodecRegistry.java
+    │   │   │       │   │   │   ├── CodecResolver.java
+    │   │   │       │   │   │   ├── ConfigInterpolator.java
+    │   │   │       │   │   │   ├── ConfigSerializable.java
+    │   │   │       │   │   │   └── MapBackedSection.java
+    │   │   │       │   │   ├── event/
+    │   │   │       │   │   │   ├── ConfigClassReloadEvent.java
+    │   │   │       │   │   │   ├── ConfigEvent.java
+    │   │   │       │   │   │   ├── ConfigInstanceReloadEvent.java
+    │   │   │       │   │   │   ├── ConfigLoadEvent.java
+    │   │   │       │   │   │   ├── ConfigPushEvent.java
+    │   │   │       │   │   │   └── ConfigSaveEvent.java
+    │   │   │       │   │   ├── exception/
+    │   │   │       │   │   │   ├── ConfigLoadException.java
+    │   │   │       │   │   │   ├── ConfigReflectionException.java
+    │   │   │       │   │   │   ├── ConfigSaveException.java
+    │   │   │       │   │   │   └── ConfigValidationException.java
+    │   │   │       │   │   ├── format/
+    │   │   │       │   │   │   ├── impl/
+    │   │   │       │   │   │   │   └── YamlConfigFormat.java
+    │   │   │       │   │   │   └── ConfigFormat.java
+    │   │   │       │   │   ├── reload/
+    │   │   │       │   │   │   ├── ConfigReloader.java
+    │   │   │       │   │   │   ├── DefaultConfigReloader.java
+    │   │   │       │   │   │   ├── ReloadResult.java
+    │   │   │       │   │   │   └── ReloadSummary.java
+    │   │   │       │   │   ├── ConfigController.java
+    │   │   │       │   │   └── ConfigDiscovery.java
+    │   │   │       │   └── model/
+    │   │   │       │       ├── command/
+    │   │   │       │       │   ├── CommandEntry.java
+    │   │   │       │       │   └── CommandLine.java
+    │   │   │       │       ├── BookConfig.java
+    │   │   │       │       ├── ItemEntry.java
+    │   │   │       │       └── LineWrapOptions.java
+    │   │   │       ├── inject/
+    │   │   │       │   ├── CodexModule.java
+    │   │   │       │   └── PaperComponentScanner.java
+    │   │   │       ├── item/
+    │   │   │       │   └── ItemBuilder.java
+    │   │   │       ├── menu/
+    │   │   │       │   ├── config/
+    │   │   │       │   │   ├── codec/
+    │   │   │       │   │   │   ├── SlotSpec.java
+    │   │   │       │   │   │   └── SlotSpecCodec.java
+    │   │   │       │   │   └── CollectableMenuConfig.java
+    │   │   │       │   ├── util/
+    │   │   │       │   │   └── CollectableClick.java
+    │   │   │       │   ├── CollectablesMenu.java
+    │   │   │       │   └── CollectablesVM.java
+    │   │   │       ├── notebooks/
+    │   │   │       │   ├── book/
+    │   │   │       │   │   ├── DefaultNotebookRegistry.java
+    │   │   │       │   │   └── NoteBookRenderService.java
+    │   │   │       │   ├── config/
+    │   │   │       │   │   ├── NoteBookConfig.java
+    │   │   │       │   │   └── NoteBookConfigLoader.java
+    │   │   │       │   └── NotebookRegistry.java
+    │   │   │       ├── persistence/
+    │   │   │       │   ├── config/
+    │   │   │       │   │   ├── CollectableStorageConfig.java
+    │   │   │       │   │   ├── CollectableStorageProvider.java
+    │   │   │       │   │   └── SqlBootstrap.java
+    │   │   │       │   ├── file/
+    │   │   │       │   │   └── FlatFileCollectableStorage.java
+    │   │   │       │   └── sql/
+    │   │   │       │       ├── JdbiCollectableStorage.java
+    │   │   │       │       ├── MySQLCollectableDao.java
+    │   │   │       │       └── SqliteCollectableDao.java
+    │   │   │       ├── text/
+    │   │   │       │   ├── DefaultPlaceholderService.java
+    │   │   │       │   ├── PapiPlaceholderService.java
+    │   │   │       │   ├── PlaceholderUtils.java
+    │   │   │       │   └── PluginPlaceholderSource.java
+    │   │   │       └── CodexPlugin.java
+    │   │   └── resources/
+    │   │       ├── collectables/
+    │   │       │   ├── notes/
+    │   │       │   │   └── example_note.yml
+    │   │       │   └── notes.yml
+    │   │       ├── menus/
+    │   │       │   └── collectables.yml
+    │   │       └── config.yml
+    │   └── build.gradle.kts
+    ├── gradle/
+    │   ├── wrapper/
+    │   │   ├── gradle-wrapper.jar
+    │   │   └── gradle-wrapper.properties
+    │   └── libs.versions.toml
+    ├── .gitignore
+    ├── README.md
+    ├── build.gradle.kts
+    ├── gradlew
+    ├── gradlew.bat
+    └── settings.gradle.kts

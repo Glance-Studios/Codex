@@ -157,13 +157,13 @@ public class DefaultCollectable extends PlayerCollectable implements ConfigSeria
                 ? commandsOnMenuLeftClick
                 : commandsOnMenuRightClick;
     }
-
-    @Override
-    public @Nullable CommandEntry commandsOnMenuShiftClick() {
-        return (commandsOnMenuShiftClick == null)
-                ? commandsOnMenuLeftClick
-                : commandsOnMenuShiftClick;
-    }
+//
+//    @Override
+//    public @Nullable CommandEntry commandsOnMenuShiftClick() {
+//        return (commandsOnMenuShiftClick == null)
+//                ? commandsOnMenuLeftClick
+//                : commandsOnMenuShiftClick;
+//    }
 
     /* Icon */
 

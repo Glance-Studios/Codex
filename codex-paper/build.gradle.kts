@@ -1,26 +1,14 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import net.minecrell.pluginyml.paper.PaperPluginDescription
-import xyz.jpenilla.runpaper.task.RunServer
 
 plugins {
-    java
-    id("com.gradleup.shadow") version "8.3.5"
-    id("net.kyori.indra.git") version "3.1.3"
-
-    // Paper environment
-    id("io.papermc.paperweight.userdev")
-    id("net.minecrell.plugin-yml.paper") version "0.6.0"
-    id("xyz.jpenilla.run-paper") version "2.3.1"
+    alias(libs.plugins.shadow)
+    alias(libs.plugins.indra)
+    alias(libs.plugins.plugin.yml)
+    alias(libs.plugins.run.paper)
 }
 
 repositories {
-    mavenCentral()
-    maven("https://oss.sonatype.org/content/repositories/snapshots/")
-    maven("https://repo.papermc.io/repository/maven-public/")
-    maven("https://repo.triumphteam.dev/snapshots")
-    maven("https://jitpack.io")
-    maven("https://repo.extendedclip.com/releases/")
-
     maven {
         name = "GitHubPackages"
         url = uri("https://maven.pkg.github.com/Glance-Studios/CollectableCodexAPI")
@@ -32,34 +20,38 @@ repositories {
 }
 
 dependencies {
-    paperweight.paperDevBundle("1.21.5-R0.1-SNAPSHOT")
-    compileOnly("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
+    compileOnly(libs.paper.api)
 
     // Codex API
-    //implementation(project(":codex-api"))
-    implementation("com.glance.codex:codex-api:1.0.3")
+    implementation(libs.codex.api)
+    // OR (when local dev)
+    // implementation(project(":codex-api"))
 
-    // Menus
-    implementation("dev.triumphteam:triumph-gui-paper:4.0.0-SNAPSHOT")
+    // GUI
+    paperLibrary(libs.triumph.gui)
 
     // Commands
-    implementation("org.incendo:cloud-paper:2.0.0-beta.10")
-    implementation("org.incendo:cloud-annotations:2.0.0")
+    paperLibrary(libs.cloud.paper)
+    paperLibrary(libs.cloud.annotations)
 
     // DI
-    implementation("com.google.inject:guice:7.0.0")
-    implementation("com.google.inject.extensions:guice-assistedinject:7.0.0")
-    annotationProcessor("com.google.auto.service:auto-service:1.1.1")
-    compileOnly("com.google.auto.service:auto-service-annotations:1.1.1")
+    paperLibrary(libs.guice)
+    paperLibrary(libs.guice.assisted)
+    annotationProcessor(libs.auto.service)
+    compileOnly(libs.auto.service.annotations)
 
     // PAPI
-    compileOnly("me.clip:placeholderapi:2.11.6")
+    compileOnly(libs.placeholderapi)
+
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
 
     // Storage
-    implementation("org.jdbi:jdbi3-core:3.49.5")
-    implementation("org.jdbi:jdbi3-sqlobject:3.49.5")
-    implementation("com.zaxxer:HikariCP:5.1.0")
-    compileOnly("org.xerial:sqlite-jdbc:3.46.0.1")
+    paperLibrary(libs.jdbi.core)
+    paperLibrary(libs.jdbi.sqlobject)
+    paperLibrary(libs.hikari)
+
+    compileOnly(libs.sqlite)
 }
 
 java {
@@ -68,11 +60,11 @@ java {
 
 // Setup SQLite Build
 val sqlite: Configuration by configurations.creating
-dependencies { sqlite("org.xerial:sqlite-jdbc:3.46.0.1") }
+dependencies { sqlite(libs.sqlite) }
 
 val shadowWithSQLite by tasks.registering(ShadowJar::class) {
     group = "build"
-    archiveClassifier.set("with-sqlite")
+    archiveClassifier.set("-sqlite")
     from(sourceSets.main.get().output)
     configurations = listOf(project.configurations.runtimeClasspath.get(), sqlite)
     minimize()
@@ -81,6 +73,8 @@ val shadowWithSQLite by tasks.registering(ShadowJar::class) {
 tasks {
     build {
         dependsOn(shadowJar)
+        dependsOn(shadowWithSQLite)
+        finalizedBy("exportJars")
     }
 
     shadowJar {
@@ -89,22 +83,28 @@ tasks {
         dependencies { exclude(dependency("org.xerial:sqlite-jdbc")) }
     }
 
-    runServer {
-        minecraftVersion("1.21.6")
-    }
-
     withType<JavaCompile> {
         options.release.set(21)
         options.encoding = Charsets.UTF_8.name()
         options.compilerArgs = listOf("-parameters")
     }
+
+    register<Copy>("exportJars") {
+        val shadowJar = named<ShadowJar>("shadowJar")
+        val shadowWithSqlite = named<ShadowJar>("shadowWithSQLite")
+
+        dependsOn(shadowJar, shadowWithSqlite)
+
+        from(
+            shadowJar.flatMap { it.archiveFile },
+            shadowWithSqlite.flatMap { it.archiveFile }
+        )
+
+        into(rootProject.layout.projectDirectory.dir("target"))
+    }
 }
 
-tasks.named<RunServer>("runServer") {
-    systemProperty("com.mojang.eula.agree", "true")
-}
-
-configure<PaperPluginDescription> {
+paper {
     name = "CollectablesCodex"
 
     apiVersion = "1.21"
@@ -113,10 +113,14 @@ configure<PaperPluginDescription> {
 
     main = "com.glance.codex.platform.paper.CodexPlugin"
 
+    loader = "com.glance.codex.bootstrap.CodexLibLoader"
+    generateLibrariesJson = true
+
     serverDependencies {
-        create("PlaceholderAPI") {
+        register("PlaceholderAPI") {
             required = false
             load = PaperPluginDescription.RelativeLoadOrder.AFTER
         }
     }
 }
+

@@ -1,37 +1,34 @@
 plugins {
-    `java-library`
-    java
-    id("io.freefair.lombok") version "8.11" apply false
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.18" apply false
+    id("java")
+    id("java-library")
 }
 
 allprojects {
     group = "com.glance.codex"
     version = "1.0.0"
 
+    apply(plugin = "java")
+    apply(plugin = "java-library")
+
     repositories {
         mavenCentral()
         maven("https://oss.sonatype.org/content/repositories/snapshots/")
         maven("https://repo.papermc.io/repository/maven-public/")
+        maven("https://repo.codemc.io/repository/maven-releases/")
         maven("https://repo.triumphteam.dev/snapshots")
         maven("https://jitpack.io")
         maven("https://repo.extendedclip.com/releases/")
     }
-}
 
-subprojects {
-    apply(plugin = "java")
+    dependencies {
+        val catalog = rootProject.the<VersionCatalogsExtension>().named("libs")
+        compileOnly(catalog.findLibrary("jetbrains-annotations").get())
+        compileOnly(catalog.findLibrary("lombok").get())
+    }
 
     java {
-        toolchain.languageVersion.set(JavaLanguageVersion.of(21))
-        withSourcesJar()
+        toolchain {
+            languageVersion.set(JavaLanguageVersion.of(21))
+        }
     }
-
-    tasks.withType<JavaCompile>().configureEach {
-        options.release.set(21)
-        options.encoding = "UTF-8"
-        options.compilerArgs.add("-parameters")
-    }
-
-    apply(plugin = "io.freefair.lombok")
 }

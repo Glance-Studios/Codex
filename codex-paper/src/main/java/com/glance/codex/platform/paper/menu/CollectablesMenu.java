@@ -217,7 +217,7 @@ public class CollectablesMenu {
             CommandConfig<? extends CommandInfo> runCommand = switch (click.ctx().guiClick()) {
                 case LEFT -> pc.commandsOnMenuLeftClick();
                 case RIGHT -> pc.commandsOnMenuRightClick();
-                case SHIFT_LEFT, SHIFT_RIGHT -> pc.commandsOnMenuShiftClick();
+                case SHIFT_LEFT, SHIFT_RIGHT -> pc.commandsOnShiftClick();
                 default -> null;
             };
 

@@ -1,0 +1,68 @@
+[versions]
+paper = "1.21.11-R0.1-SNAPSHOT"
+
+# Collectables Codex API
+codex = "1.1.2"
+
+# Cloud
+cloud = "2.0.0"
+cloud-paper = "2.0.0-beta.10"
+
+# Libraries
+guice = "7.0.0"
+auto-service = "1.1.1"
+placeholderapi = "2.11.6"
+jdbi = "3.49.5"
+hikari = "5.1.0"
+sqlite = "3.46.0.1"
+
+# Utility
+lombok = "1.18.42"
+jetbrains-annotations = "26.0.2-1"
+
+# Plugins
+shadow = "8.3.5"
+plugin-yml = "0.6.0"
+indra = "3.1.3"
+run-paper = "2.3.1"
+
+[libraries]
+
+# Paper
+paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
+
+# Collectables Codex
+codex-api = { module = "com.glance.codex:codex-api", version.ref = "codex" }
+
+# Cloud
+cloud-core = { module = "org.incendo:cloud-core", version.ref = "cloud" }
+cloud-annotations = { module = "org.incendo:cloud-annotations", version.ref = "cloud" }
+cloud-paper = { module = "org.incendo:cloud-paper", version.ref = "cloud-paper" }
+
+# DI
+guice = { module = "com.google.inject:guice", version.ref = "guice" }
+guice-assisted = { module = "com.google.inject.extensions:guice-assistedinject", version.ref = "guice" }
+
+# Auto service
+auto-service = { module = "com.google.auto.service:auto-service", version.ref = "auto-service" }
+auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version.ref = "auto-service" }
+
+# Storage
+jdbi-core = { module = "org.jdbi:jdbi3-core", version.ref = "jdbi" }
+jdbi-sqlobject = { module = "org.jdbi:jdbi3-sqlobject", version.ref = "jdbi" }
+hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
+sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
+
+# Other
+placeholderapi = { module = "me.clip:placeholderapi", version.ref = "placeholderapi" }
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }
+
+# GUI
+triumph-gui = { module = "dev.triumphteam:triumph-gui-paper", version = "4.0.0-SNAPSHOT" }
+
+[plugins]
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+plugin-yml = { id = "net.minecrell.plugin-yml.paper", version.ref = "plugin-yml" }
+indra = { id = "net.kyori.indra.git", version.ref = "indra" }
+run-paper = { id = "xyz.jpenilla.run-paper", version.ref = "run-paper" }

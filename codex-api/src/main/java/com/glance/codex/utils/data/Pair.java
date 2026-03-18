@@ -1,18 +1,22 @@
 package com.glance.codex.utils.data;
 
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Map;
 
+@AllArgsConstructor
 @RequiredArgsConstructor
 public final class Pair<A, B> implements Map.Entry<A, B>, Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
-    public final @Nullable A first;
-    public final @Nullable B second;
+    public transient @Nullable A first;
+    public transient @Nullable B second;
 
     public static <A, B> Pair<A, B> of(@Nullable A first, @Nullable B second) {
         return new Pair<>(first, second);
