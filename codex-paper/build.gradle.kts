@@ -28,7 +28,7 @@ dependencies {
     // implementation(project(":codex-api"))
 
     // GUI
-    paperLibrary(libs.triumph.gui)
+    implementation(libs.triumph.gui)
 
     // Commands
     paperLibrary(libs.cloud.paper)
@@ -67,7 +67,9 @@ val shadowWithSQLite by tasks.registering(ShadowJar::class) {
     archiveClassifier.set("sqlite")
     from(sourceSets.main.get().output)
     configurations = listOf(project.configurations.runtimeClasspath.get(), sqlite)
-    minimize()
+    minimize {
+        exclude(dependency("dev.triumphteam:.*:.*"))
+    }
 }
 
 tasks {
@@ -79,7 +81,9 @@ tasks {
 
     shadowJar {
         archiveClassifier.set("")
-        minimize()
+        minimize {
+            exclude(dependency("dev.triumphteam:.*:.*"))
+        }
         dependencies { exclude(dependency("org.xerial:sqlite-jdbc")) }
     }
 
