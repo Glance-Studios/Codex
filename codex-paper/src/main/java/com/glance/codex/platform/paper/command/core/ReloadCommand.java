@@ -53,7 +53,7 @@ public class ReloadCommand implements CommandHandler {
         return meta == null || meta.supportHotReload();
     }
 
-    @Command("collectables reload")
+    @Command("collectables|journal reload")
     public void reloadAll(
         @NotNull CommandSender sender
     ) {
@@ -61,7 +61,7 @@ public class ReloadCommand implements CommandHandler {
                 sender.sendMessage(sum.prettyPrint()));
     }
 
-    @Command("collectables reload <key>")
+    @Command("collectables|journal reload <key>")
     public void reloadClass(
         @NotNull CommandSender sender,
         @Argument(value = "key", suggestions = "configNames") String key

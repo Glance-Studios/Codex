@@ -73,7 +73,7 @@ public class CollectionsCommand implements CommandHandler {
                 .toList();
     }
 
-    @Command("collectables unlock <player> <namespace> <id>")
+    @Command("collectables|journal unlock <player> <namespace> <id>")
     @Permission("collectables.admin")
     public void unlock(
             @NotNull CommandSender sender,
@@ -102,13 +102,13 @@ public class CollectionsCommand implements CommandHandler {
 
     }
 
-    @Command("collectables")
+    @Command("collectables|journal")
     @Permission("collectables.menu")
     public void openMenu(@NotNull Player sender) {
         this.menu.open(sender, false);
     }
 
-    @Command("collectables relock <player> <namespace> <id>")
+    @Command("collectables|journal relock <player> <namespace> <id>")
     @Permission("collectables.admin")
     public void relock(
         @NotNull CommandSender sender,
@@ -135,7 +135,7 @@ public class CollectionsCommand implements CommandHandler {
         });
     }
 
-    @Command("collectables clear <player> <namespace>")
+    @Command("collectables|journal clear <player> <namespace>")
     @Permission("collectables.admin")
     public void clearNamespace(
         @NotNull CommandSender sender,
@@ -151,7 +151,7 @@ public class CollectionsCommand implements CommandHandler {
         });
     }
 
-    @Command("collectables clearall <player>")
+    @Command("collectables|journal clearall <player>")
     @Permission("collectables.admin")
     public void clearAll(
         @NotNull CommandSender sender,

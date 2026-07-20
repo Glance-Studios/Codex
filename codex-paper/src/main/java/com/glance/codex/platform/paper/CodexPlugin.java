@@ -10,6 +10,7 @@ import com.glance.codex.platform.paper.inject.PaperComponentScanner;
 import com.glance.codex.platform.paper.text.PluginPlaceholderSource;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import dev.triumphteam.gui.paper.PaperGuiSettings;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.ServicePriority;
@@ -38,10 +39,12 @@ public class CodexPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        // Register this plugin with triumph-gui explicitly so it never falls back to
+        // JavaPlugin.getProvidingPlugin(PaperGuiListener.class), which is classloader-fragile.
+        PaperGuiSettings.init(this);
+
         saveResource("config.yml", false);
         saveResource("menus/collectables.yml", false);
-        saveResource("collectables/notes/example_note.yml", false);
-        saveResource("collectables/notes.yml", false);
 
         PaperComponentScanner.scanAndInitialize(this, this.injector);
 

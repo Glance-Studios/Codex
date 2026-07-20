@@ -71,7 +71,7 @@ public class NotesCommand implements CommandHandler {
                 .toList();
     }
 
-    @Command("collectables notes open <player> <namespace> <id>")
+    @Command("collectables|journal notes open <player> <namespace> <id>")
     @Permission("collectables.notes.open")
     public void openBook(
             @NotNull CommandSender sender,

@@ -54,10 +54,16 @@ public class ItemBuilder {
      * @return the configured item builder
      */
     public static ItemBuilder fromConfig(
-            @NotNull ItemConfig entry,
+            @Nullable ItemConfig entry,
             @Nullable OfflinePlayer player,
             @Nullable PlaceholderService resolver
     ) {
+        // Guard against an unconfigured item entry (missing/null config section) so a
+        // single misconfigured slot degrades to a placeholder instead of failing the render
+        if (entry == null) {
+            return of(Material.BARRIER);
+        }
+
         LineWrapConfig wrapOptions = (entry.lineWrap() != null)
                 ? entry.lineWrap()
                 : new LineWrapConfig(){};

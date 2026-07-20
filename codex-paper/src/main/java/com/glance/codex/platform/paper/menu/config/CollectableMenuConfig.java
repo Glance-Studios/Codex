@@ -15,7 +15,7 @@ import org.bukkit.Material;
 @AutoService(Config.Handler.class)
 public class CollectableMenuConfig implements Config.Handler {
 
-    @ConfigPath("title") private String title = "<#5306bf>Collections";
+    @ConfigPath("title") private String title = "";
     @ConfigPath("rows") private int rows = 6;
 
     // Entry grid
@@ -32,10 +32,14 @@ public class CollectableMenuConfig implements Config.Handler {
     @ConfigPath("items.filler") private ItemEntry filler = ItemEntry
             .of(Material.LIGHT_GRAY_STAINED_GLASS_PANE).name("<gray> ");
 
-    // Buttons - todo
-    @ConfigPath("items.repo.next") private ItemEntry repoNextItem;
-    @ConfigPath("items.repo.prev") private ItemEntry repoPrevItem;
-    @ConfigPath("items.entry.next") private ItemEntry entryNextItem;
-    @ConfigPath("items.entry.prev") private ItemEntry entryPrevItem;
+    // Buttons
+    @ConfigPath("items.repo.next") private ItemEntry repoNextItem = ItemEntry
+            .of(Material.ARROW).name("<green>Next");
+    @ConfigPath("items.repo.prev") private ItemEntry repoPrevItem = ItemEntry
+            .of(Material.ARROW).name("<green>Previous");
+    @ConfigPath("items.entry.next") private ItemEntry entryNextItem = ItemEntry
+            .of(Material.ARROW).name("<green>Next Page");
+    @ConfigPath("items.entry.prev") private ItemEntry entryPrevItem = ItemEntry
+            .of(Material.ARROW).name("<green>Previous Page");
 
 }
