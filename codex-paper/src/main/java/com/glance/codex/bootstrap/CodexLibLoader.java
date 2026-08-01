@@ -16,6 +16,8 @@ import java.util.Map;
 
 public final class CodexLibLoader implements PluginLoader {
 
+    private static final String MAVEN_CENTRAL = "https://repo.maven.apache.org/maven2";
+
     @Override
     public void classloader(PluginClasspathBuilder classpathBuilder) {
         MavenLibraryResolver resolver = new MavenLibraryResolver();
@@ -26,9 +28,20 @@ public final class CodexLibLoader implements PluginLoader {
 
         libs.repositories().forEach((id, url) ->
                 resolver.addRepository(
-                        new RemoteRepository.Builder(id, "default", url).build()));
+                        new RemoteRepository.Builder(id, "default", mirror(url)).build()));
 
         classpathBuilder.addLibrary(resolver);
+    }
+
+    /**
+     * Gradle writes Maven Central into paper-libraries.json, but resolving against it directly is
+     * against Maven Central's terms of service, so Paper logs a RuntimeException stack trace on
+     * every boot for it. Redirect to the mirror Paper asks plugins to use.
+     */
+    private static String mirror(String url) {
+        return url.startsWith(MAVEN_CENTRAL)
+                ? MavenLibraryResolver.MAVEN_CENTRAL_DEFAULT_MIRROR
+                : url;
     }
 
     private PluginLibraries load() {
