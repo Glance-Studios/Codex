@@ -5,6 +5,7 @@ import com.glance.codex.api.collectable.base.PlayerCollectable;
 import com.glance.codex.api.collectable.config.RepositoryConfig;
 import com.glance.codex.api.data.storage.CollectableStorage;
 import com.glance.codex.api.text.PlaceholderService;
+import com.glance.codex.platform.paper.collectable.DefaultCollectable;
 import com.glance.codex.platform.paper.collectable.config.CollectableRepositoryConfig;
 import com.glance.codex.platform.paper.collectable.config.EntryParser;
 import com.glance.codex.platform.paper.collectable.factory.CollectableRepoFactory;
@@ -102,6 +103,10 @@ public class DefaultCollectableManager implements CollectableManager, Listener {
             );
         }
 
+        if (config instanceof CollectableRepositoryConfig repoConfig) {
+            applyRepositoryMessageDefaults(entries, repoConfig);
+        }
+
         plugin.getLogger().info(
             "Registered Repository: '" + config.namespace() + "' with "
                     + entries.size() + " entries"
@@ -113,6 +118,43 @@ public class DefaultCollectableManager implements CollectableManager, Listener {
                 c.setMeta(new CollectableMeta(config.namespace(), entryId, repository)));
 
         registerRepository(repository);
+    }
+
+    /**
+     * Push the repository's message defaults down onto entries that did not set their own
+     * <p>
+     * Done once at load rather than on every unlock, so hot reloads pick up edits and the
+     * unlock path stays untouched
+     * <p>
+     * If the repository declares a discover message but no replay message, replays are
+     * explicitly silenced. Otherwise every entry inheriting the discover default would also
+     * repeat it on replay via {@link DefaultCollectable#playerMessageOnReplay()}, which is
+     * not what a "first discovery" announcement means
+     */
+    private void applyRepositoryMessageDefaults(
+        @NotNull Map<String, Collectable> entries,
+        @NotNull CollectableRepositoryConfig config
+    ) {
+        String playerOnReplay = config.playerMessageOnReplay();
+        if (playerOnReplay == null && config.playerMessageOnDiscover() != null) {
+            playerOnReplay = "";
+        }
+
+        String globalOnReplay = config.globalMessageOnReplay();
+        if (globalOnReplay == null && config.globalMessageOnDiscover() != null) {
+            globalOnReplay = "";
+        }
+
+        for (Collectable collectable : entries.values()) {
+            if (collectable instanceof DefaultCollectable dc) {
+                dc.applyMessageDefaults(
+                        config.playerMessageOnDiscover(),
+                        config.globalMessageOnDiscover(),
+                        playerOnReplay,
+                        globalOnReplay
+                );
+            }
+        }
     }
 
     @Override

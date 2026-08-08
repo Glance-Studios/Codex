@@ -25,30 +25,34 @@ public class PrimitiveCodecs {
      * Registers all standard primitive and boxed types into the given codec registry
      */
     public void registerAll() {
-        CodecRegistry.register(Integer.class, new PrimitiveCodec<>(ConfigurationSection::getInt,
+        // Bukkit answers 0 / false for a path that is not set, so every numeric and boolean
+        // reader is guarded by isSet. Without it an absent key decodes as the zero value
+        // instead of null, the codec's defaultValue is never reached, and a field declared
+        // 'enabled = true' silently loads as false.
+        CodecRegistry.register(Integer.class, new PrimitiveCodec<>(unsetAsNull(ConfigurationSection::getInt),
                 int.class, Integer.class));
 
-        CodecRegistry.register(Long.class, new PrimitiveCodec<>(ConfigurationSection::getLong,
+        CodecRegistry.register(Long.class, new PrimitiveCodec<>(unsetAsNull(ConfigurationSection::getLong),
                 long.class, Long.class));
 
-        CodecRegistry.register(Double.class, new PrimitiveCodec<>(ConfigurationSection::getDouble,
+        CodecRegistry.register(Double.class, new PrimitiveCodec<>(unsetAsNull(ConfigurationSection::getDouble),
                 double.class, Double.class));
 
         CodecRegistry.register(Float.class, new PrimitiveCodec<>(
-                (sec, path) -> (float) sec.getDouble(path),
+                unsetAsNull((sec, path) -> (float) sec.getDouble(path)),
                 float.class, Float.class
         ));
 
-        CodecRegistry.register(Boolean.class, new PrimitiveCodec<>(ConfigurationSection::getBoolean,
+        CodecRegistry.register(Boolean.class, new PrimitiveCodec<>(unsetAsNull(ConfigurationSection::getBoolean),
                 boolean.class, Boolean.class));
 
         CodecRegistry.register(Byte.class, new PrimitiveCodec<>(
-                (sec, path) -> (byte) sec.getInt(path),
+                unsetAsNull((sec, path) -> (byte) sec.getInt(path)),
                 byte.class, Byte.class
         ));
 
         CodecRegistry.register(Short.class, new PrimitiveCodec<>(
-                (sec, path) -> (short) sec.getInt(path),
+                unsetAsNull((sec, path) -> (short) sec.getInt(path)),
                 short.class, Short.class
         ));
 
@@ -67,6 +71,20 @@ public class PrimitiveCodecs {
                 },
                 String.class
         ));
+    }
+
+    /**
+     * Wrap a reader so a path that is not set yields null instead of the type's zero value,
+     * letting the codec fall back to the caller's default
+     *
+     * @param reader the underlying section reader
+     * @return a reader that answers null for an unset path
+     * @param <T> the value type
+     */
+    private <T> BiFunction<ConfigurationSection, String, T> unsetAsNull(
+            @NotNull final BiFunction<ConfigurationSection, String, T> reader
+    ) {
+        return (sec, path) -> sec.isSet(path) ? reader.apply(sec, path) : null;
     }
 
     /**

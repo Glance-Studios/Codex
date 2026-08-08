@@ -2,6 +2,7 @@ package com.glance.codex.platform.paper.notebooks.book;
 
 import com.glance.codex.platform.paper.config.engine.event.ConfigClassReloadEvent;
 import com.glance.codex.platform.paper.config.model.BookConfig;
+import com.glance.codex.platform.paper.config.model.SoundEntry;
 import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
 import com.glance.codex.platform.paper.notebooks.config.NoteBookConfig;
 import com.glance.codex.platform.paper.notebooks.config.NoteBookConfigLoader;
@@ -11,6 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import net.kyori.adventure.sound.Sound;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -95,7 +97,37 @@ public class DefaultNotebookRegistry implements Listener, NotebookRegistry {
             @Nullable Map<String, String> placeholders
     ) {
         ItemStack book = renderService.buildWrittenBook(cfg, player, placeholders);
-        plugin.getServer().getScheduler().runTask(plugin, () -> player.openBook(book));
+        List<SoundEntry> layers = cfg.openSoundLayers();
+
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            player.openBook(book);
+            playLayers(layers, player);
+        });
+    }
+
+    /**
+     * Play every layer of an open cue to the viewer
+     * <p>
+     * Layers with no delay fire together with the book opening; the rest are scheduled
+     * so a cue can be staggered. A delayed layer is dropped if the player leaves first
+     */
+    private void playLayers(@NotNull List<SoundEntry> layers, @NotNull Player player) {
+        for (SoundEntry layer : layers) {
+            Sound sound = layer.toAdventure();
+            if (sound == null) continue;
+
+            long delay = layer.delayTicks();
+            if (delay <= 0L) {
+                player.playSound(sound, Sound.Emitter.self());
+                continue;
+            }
+
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                if (player.isOnline()) {
+                    player.playSound(sound, Sound.Emitter.self());
+                }
+            }, delay);
+        }
     }
 
     @Override

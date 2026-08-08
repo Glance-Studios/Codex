@@ -1,3 +1,21 @@
+# Played when any book in this file is opened. Any sound key works, including a custom
+# one from your resource pack. Remove or set 'enabled: false' for silent books.
+default_open_sound:
+  enabled: true
+  sound: "minecraft:item.book.page_turn"
+  volume: 1.0
+  pitch: 1.0
+  source: MASTER
+
+# Layered form, takes precedence over the single one above. Layers play together
+# unless a layer sets 'delayTicks' (20 ticks = 1 second), so cues can be staggered.
+# default_open_sounds:
+#   - sound: "minecraft:item.book.page_turn"
+#   - sound: "minecraft:block.enchantment_table.use"
+#     volume: 0.6
+#     pitch: 1.2
+#     delayTicks: 3
+
 book:
   enabled: true
   title: "Mage's Manifesto"

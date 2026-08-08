@@ -15,6 +15,13 @@ selected_icon:
   lore:
     - "<yellow>Currently viewing notes"
 show_when_locked: true
+
+# Sent the first time a player discovers any entry in this repository.
+# An entry may override it with its own 'playerMessageOnDiscover'.
+player_message_on_discover: "<gray>You discovered <reset>{collectable_name_formatted}<gray>!"
+# Uncomment to announce discoveries to the whole server:
+# global_message_on_discover: "<gray>{player} discovered <reset>{collectable_name_formatted}<gray>!"
+
 entries:
   example_note:
     type: "NOTE"

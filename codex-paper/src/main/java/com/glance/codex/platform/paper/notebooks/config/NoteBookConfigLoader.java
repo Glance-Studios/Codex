@@ -86,7 +86,14 @@ public class NoteBookConfigLoader {
             }
 
             for (var entry : toRegister.entrySet()) {
-                registry.register(namespace, entry.getKey(), entry.getValue());
+                BookConfig book = entry.getValue();
+
+                // File level fallback; a book that declares a cue in either form keeps it
+                if (book.openSoundLayers().isEmpty()) {
+                    book.openSounds(cfg.defaultOpenSoundLayers());
+                }
+
+                registry.register(namespace, entry.getKey(), book);
                 CodexPlugin.getInstance().getLogger().info(
                     "Registered Note: " + namespace + ":" + entry.getKey() + " from " + path.getFileName()
                 );

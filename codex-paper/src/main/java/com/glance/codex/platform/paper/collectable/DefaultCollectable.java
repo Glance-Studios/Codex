@@ -121,6 +121,30 @@ public class DefaultCollectable extends PlayerCollectable implements ConfigSeria
         return globalMessageOnReplay != null ? globalMessageOnReplay : globalMessageOnDiscover;
     }
 
+    /**
+     * Fill in any message this entry did not declare with a repository level default
+     * <p>
+     * Entry values always win. A blank default is meaningful: it leaves that message
+     * silent rather than letting {@link #playerMessageOnReplay()} fall back to the
+     * discover message
+     *
+     * @param playerOnDiscover default player message on first discovery
+     * @param globalOnDiscover default broadcast on first discovery
+     * @param playerOnReplay default player message on replay
+     * @param globalOnReplay default broadcast on replay
+     */
+    public void applyMessageDefaults(
+            @Nullable String playerOnDiscover,
+            @Nullable String globalOnDiscover,
+            @Nullable String playerOnReplay,
+            @Nullable String globalOnReplay
+    ) {
+        if (playerMessageOnDiscover == null) playerMessageOnDiscover = playerOnDiscover;
+        if (globalMessageOnDiscover == null) globalMessageOnDiscover = globalOnDiscover;
+        if (playerMessageOnReplay == null) playerMessageOnReplay = playerOnReplay;
+        if (globalMessageOnReplay == null) globalMessageOnReplay = globalOnReplay;
+    }
+
     /* Display Name */
 
     @Override
