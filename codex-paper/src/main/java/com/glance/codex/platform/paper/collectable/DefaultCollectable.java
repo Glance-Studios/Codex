@@ -168,11 +168,16 @@ public class DefaultCollectable extends PlayerCollectable implements ConfigSeria
 
     /* Commands */
 
+    /**
+     * Commands to run when an already unlocked entry is opened again
+     * <p>
+     * Deliberately does not fall back to {@link #commandsOnDiscover}. Discovery commands are
+     * how rewards are granted, and inheriting them here would pay the reward out again on
+     * every re-read, which is farmable. Replay commands must be configured explicitly
+     */
     @Override
     public CommandEntry commandsOnReplay() {
-        return (commandsOnReplay == null)
-                ? commandsOnDiscover
-                : commandsOnReplay;
+        return commandsOnReplay;
     }
 
     @Override
