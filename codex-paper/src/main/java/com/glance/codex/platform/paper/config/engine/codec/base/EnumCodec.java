@@ -1,11 +1,14 @@
 package com.glance.codex.platform.paper.config.engine.codec.base;
 
 import com.glance.codex.utils.data.TypeCodec;
+import lombok.extern.slf4j.Slf4j;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /**
  * Codec for Java {@link Enum} types
@@ -18,6 +21,7 @@ import java.lang.reflect.Type;
  *
  * @author Cammy
  */
+@Slf4j
 public final class EnumCodec implements TypeCodec<Enum<?>> {
 
     @Override
@@ -36,6 +40,19 @@ public final class EnumCodec implements TypeCodec<Enum<?>> {
             if (((Enum<?>) constant).name().equalsIgnoreCase(String.valueOf(raw))) {
                 return (Enum<?>) constant;
             }
+        }
+
+        // An absent key legitimately falls back to the default, but a value that was written
+        // and matched nothing is a typo. Silently defaulting it hides real config mistakes,
+        // e.g. a misspelled PLAYER quietly running a command as console instead.
+        if (raw != null) {
+            log.warn("'{}' is not a valid {} value, using {} instead. Valid values: {}",
+                    raw,
+                    cls.getSimpleName(),
+                    defaultValue,
+                    Arrays.stream(cls.getEnumConstants())
+                            .map(c -> ((Enum<?>) c).name())
+                            .collect(Collectors.joining(", ")));
         }
 
         return defaultValue;
