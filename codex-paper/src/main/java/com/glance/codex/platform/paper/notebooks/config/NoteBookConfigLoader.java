@@ -3,6 +3,7 @@ package com.glance.codex.platform.paper.notebooks.config;
 import com.glance.codex.platform.paper.CodexPlugin;
 import com.glance.codex.platform.paper.config.model.BookConfig;
 import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
+import com.glance.codex.platform.paper.notebooks.edit.BookSource;
 import com.glance.codex.utils.format.StringUtils;
 import com.google.inject.Injector;
 import lombok.experimental.UtilityClass;
@@ -26,6 +27,12 @@ import java.util.*;
 public class NoteBookConfigLoader {
 
     private final String NOTES = "notes";
+
+    /**
+     * A book resolved from config but not yet registered, paired with the section path it
+     * was read from so edits can be written back to the same key
+     */
+    private record PendingBook(@NotNull BookConfig cfg, @NotNull String yamlPath) {}
 
     /**
      * Processes a list of {@link NoteBookConfig} instances and registers their books
@@ -52,15 +59,16 @@ public class NoteBookConfigLoader {
                     : deriveNamespaceFromPath(path);
             if (namespace.isBlank()) namespace = NOTES;
 
-            Map<String, BookConfig> toRegister = new LinkedHashMap<>();
+            Map<String, PendingBook> toRegister = new LinkedHashMap<>();
 
-            // Multi-book form
+            // Multi-book form. The registered id is sanitized, but the config key is not,
+            // so the yaml path has to keep the raw key or a write back would miss it.
             if (cfg.books() != null && !cfg.books().isEmpty()) {
                 cfg.books().forEach((rawId, book) -> {
                     if (book == null) return;
                     String id = sanitizeId(rawId);
                     if (!id.isBlank()) {
-                        toRegister.put(id, book);
+                        toRegister.put(id, new PendingBook(book, "books." + rawId));
                     } else {
                         log.debug("Skipped book with blank id in {}", path);
                     }
@@ -74,7 +82,7 @@ public class NoteBookConfigLoader {
                         : deriveIdFromPath(path);
 
                 if (!id.isBlank()) {
-                    toRegister.put(id, cfg.book());
+                    toRegister.put(id, new PendingBook(cfg.book(), "book"));
                 } else {
                     log.debug("Skipping single book with blank id in {}", path);
                 }
@@ -86,14 +94,18 @@ public class NoteBookConfigLoader {
             }
 
             for (var entry : toRegister.entrySet()) {
-                BookConfig book = entry.getValue();
+                BookConfig book = entry.getValue().cfg();
 
                 // File level fallback; a book that declares a cue in either form keeps it
                 if (book.openSoundLayers().isEmpty()) {
                     book.openSounds(cfg.defaultOpenSoundLayers());
                 }
 
-                registry.register(namespace, entry.getKey(), book);
+                BookSource source = (path != null)
+                        ? new BookSource(path, entry.getValue().yamlPath())
+                        : null;
+
+                registry.register(namespace, entry.getKey(), book, source);
                 CodexPlugin.getInstance().getLogger().info(
                     "Registered Note: " + namespace + ":" + entry.getKey() + " from " + path.getFileName()
                 );

@@ -1,7 +1,9 @@
 package com.glance.codex.platform.paper.command.core;
 
 import com.glance.codex.platform.paper.command.engine.CommandHandler;
+import com.glance.codex.platform.paper.command.engine.suggestion.SuggestionHelpers;
 import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
+import com.glance.codex.platform.paper.notebooks.edit.BookEditor;
 import com.google.auto.service.AutoService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -25,12 +27,15 @@ import java.util.Locale;
 public class NotesCommand implements CommandHandler {
 
     private final NotebookRegistry notes;
+    private final BookEditor editor;
 
     @Inject
     public NotesCommand(
-            @NotNull final NotebookRegistry notes
+            @NotNull final NotebookRegistry notes,
+            @NotNull final BookEditor editor
     ) {
         this.notes = notes;
+        this.editor = editor;
     }
 
     @Suggestions("notes-namespaces")
@@ -38,15 +43,7 @@ public class NotesCommand implements CommandHandler {
             final CommandContext<CommandSender> ctx,
             final String input
     ) {
-        final String prefix = input == null ? "" : input;
-        final String pfx = prefix.toLowerCase(Locale.ROOT);
-
-        return notes.all().keySet().stream()
-                .map(NamespacedKey::getNamespace)
-                .distinct()
-                .filter(ns -> ns.toLowerCase(Locale.ROOT).startsWith(pfx))
-                .sorted(String.CASE_INSENSITIVE_ORDER)
-                .toList();
+        return SuggestionHelpers.noteNamespaces(notes, input);
     }
 
     @Suggestions("notes-ids")
@@ -54,21 +51,7 @@ public class NotesCommand implements CommandHandler {
             final CommandContext<CommandSender> ctx,
             final String input
     ) {
-        final String prefix = input == null ? "" : input;
-        final String pfx = prefix.toLowerCase(Locale.ROOT);
-
-        final String namespace = ctx.getOrDefault("namespace", "notes");
-        if (namespace.isEmpty() || namespace.isBlank()) {
-            return List.of();
-        }
-
-        return notes.all().keySet().stream()
-                .filter(k -> k.getNamespace().equalsIgnoreCase(namespace))
-                .map(NamespacedKey::getKey)
-                .distinct()
-                .filter(id -> id.toLowerCase(Locale.ROOT).startsWith(pfx))
-                .sorted(String.CASE_INSENSITIVE_ORDER)
-                .toList();
+        return SuggestionHelpers.noteIds(notes, ctx.getOrDefault("namespace", "notes"), input);
     }
 
     @Command("collectables|journal notes open <player> <namespace> <id>")
@@ -80,6 +63,30 @@ public class NotesCommand implements CommandHandler {
             @Argument(value = "id", suggestions = "notes-ids") String id
     ) {
         notes.open(namespace, id, target);
+    }
+
+    @Command("collectables|journal notes edit <player> <namespace> <id>")
+    @Permission("collectables.admin")
+    public void editBook(
+            @NotNull CommandSender sender,
+            @Argument("player") Player target,
+            @Argument(value = "namespace", suggestions = "notes-namespaces") String namespace,
+            @Argument(value = "id", suggestions = "notes-ids") String id
+    ) {
+        NamespacedKey key = new NamespacedKey(namespace, id);
+
+        String failure = editor.give(target, key);
+        if (failure != null) {
+            sender.sendMessage(failure);
+            return;
+        }
+
+        target.sendMessage("Editing " + key.asString()
+                + ". Hold the book and right click to edit, then sign or close it to save.");
+
+        if (!sender.equals(target)) {
+            sender.sendMessage("Gave " + target.getName() + " an editor book for " + key.asString());
+        }
     }
 
 }

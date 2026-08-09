@@ -6,6 +6,7 @@ import com.glance.codex.platform.paper.config.model.SoundEntry;
 import com.glance.codex.platform.paper.notebooks.NotebookRegistry;
 import com.glance.codex.platform.paper.notebooks.config.NoteBookConfig;
 import com.glance.codex.platform.paper.notebooks.config.NoteBookConfigLoader;
+import com.glance.codex.platform.paper.notebooks.edit.BookSource;
 import com.glance.codex.utils.lifecycle.Manager;
 import com.google.auto.service.AutoService;
 import com.google.inject.Inject;
@@ -34,16 +35,20 @@ public class DefaultNotebookRegistry implements Listener, NotebookRegistry {
 
     private final Plugin plugin;
     private final NoteBookRenderService renderService;
+    private final SoundCuePlayer soundPlayer;
 
     private final Map<NamespacedKey, BookConfig> byKey = new ConcurrentHashMap<>();
+    private final Map<NamespacedKey, BookSource> sources = new ConcurrentHashMap<>();
 
     @Inject
     public DefaultNotebookRegistry(
             @NotNull final Plugin plugin,
-            @NotNull final NoteBookRenderService renderService
+            @NotNull final NoteBookRenderService renderService,
+            @NotNull final SoundCuePlayer soundPlayer
     ) {
         this.plugin = plugin;
         this.renderService = renderService;
+        this.soundPlayer = soundPlayer;
     }
 
     @Override
@@ -52,15 +57,27 @@ public class DefaultNotebookRegistry implements Listener, NotebookRegistry {
     }
 
     @Override
-    public void register(@NotNull String namespace, @NotNull String id, @NotNull BookConfig cfg) {
+    public void register(
+            @NotNull String namespace,
+            @NotNull String id,
+            @NotNull BookConfig cfg,
+            @Nullable BookSource source
+    ) {
         if (!cfg.enabled()) return;
         NamespacedKey key = new NamespacedKey(namespace, id);
         byKey.put(key, cfg);
+        if (source != null) sources.put(key, source);
+    }
+
+    @Override
+    public Optional<BookSource> sourceOf(@NotNull NamespacedKey id) {
+        return Optional.ofNullable(sources.get(id));
     }
 
     @Override
     public void unregisterNamespace(@NotNull String namespace) {
         byKey.keySet().removeIf(k -> k.namespace().equals(namespace));
+        sources.keySet().removeIf(k -> k.namespace().equals(namespace));
     }
 
     @Override
@@ -101,33 +118,8 @@ public class DefaultNotebookRegistry implements Listener, NotebookRegistry {
 
         plugin.getServer().getScheduler().runTask(plugin, () -> {
             player.openBook(book);
-            playLayers(layers, player);
+            soundPlayer.play(layers, player);
         });
-    }
-
-    /**
-     * Play every layer of an open cue to the viewer
-     * <p>
-     * Layers with no delay fire together with the book opening; the rest are scheduled
-     * so a cue can be staggered. A delayed layer is dropped if the player leaves first
-     */
-    private void playLayers(@NotNull List<SoundEntry> layers, @NotNull Player player) {
-        for (SoundEntry layer : layers) {
-            Sound sound = layer.toAdventure();
-            if (sound == null) continue;
-
-            long delay = layer.delayTicks();
-            if (delay <= 0L) {
-                player.playSound(sound, Sound.Emitter.self());
-                continue;
-            }
-
-            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-                if (player.isOnline()) {
-                    player.playSound(sound, Sound.Emitter.self());
-                }
-            }, delay);
-        }
     }
 
     @Override
@@ -137,6 +129,7 @@ public class DefaultNotebookRegistry implements Listener, NotebookRegistry {
 
     public void clear() {
         this.byKey.clear();
+        this.sources.clear();
     }
 
     @EventHandler
