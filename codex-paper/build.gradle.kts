@@ -72,10 +72,32 @@ val shadowWithSQLite by tasks.registering(ShadowJar::class) {
     }
 }
 
+// Setup Spellbrook Build - the SQLite jar plus the module that knows their magic events.
+// One file on the server, and the core plugin stays free of any mention of SB-Magic.
+val spellbrook: Configuration by configurations.creating
+dependencies { spellbrook(project(":codex-spellbrook")) }
+
+val shadowWithSpellbrook by tasks.registering(ShadowJar::class) {
+    group = "build"
+    archiveClassifier.set("spellbrook")
+    from(sourceSets.main.get().output)
+    configurations = listOf(project.configurations.runtimeClasspath.get(), sqlite, spellbrook)
+    // Without this the module's service entry is overwritten by this project's rather than
+    // added to it, and a manager nothing lists is a manager that never runs
+    mergeServiceFiles()
+    minimize {
+        exclude(dependency("dev.triumphteam:.*:.*"))
+        // Nothing references the module by name, so minimization would drop it and leave a
+        // service entry pointing at a class that is not there
+        exclude(project(":codex-spellbrook"))
+    }
+}
+
 tasks {
     build {
         dependsOn(shadowJar)
         dependsOn(shadowWithSQLite)
+        dependsOn(shadowWithSpellbrook)
         finalizedBy("exportJars")
     }
 
@@ -96,12 +118,14 @@ tasks {
     register<Copy>("exportJars") {
         val shadowJar = named<ShadowJar>("shadowJar")
         val shadowWithSqlite = named<ShadowJar>("shadowWithSQLite")
+        val shadowSpellbrook = named<ShadowJar>("shadowWithSpellbrook")
 
-        dependsOn(shadowJar, shadowWithSqlite)
+        dependsOn(shadowJar, shadowWithSqlite, shadowSpellbrook)
 
         from(
             shadowJar.flatMap { it.archiveFile },
-            shadowWithSqlite.flatMap { it.archiveFile }
+            shadowWithSqlite.flatMap { it.archiveFile },
+            shadowSpellbrook.flatMap { it.archiveFile }
         )
 
         into(rootProject.layout.projectDirectory.dir("target"))
@@ -124,6 +148,13 @@ paper {
         register("PlaceholderAPI") {
             required = false
             load = PaperPluginDescription.RelativeLoadOrder.AFTER
+        }
+        // Only the spellbrook build has anything that uses this, and it is optional there
+        // too. joinClasspath because a probe for its event classes fails without it.
+        register("SB-Magic") {
+            required = false
+            joinClasspath = true
+            load = PaperPluginDescription.RelativeLoadOrder.BEFORE
         }
     }
 }

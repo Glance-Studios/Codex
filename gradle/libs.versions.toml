@@ -4,6 +4,9 @@ paper = "1.21.11-R0.1-SNAPSHOT"
 # Collectables Codex API
 codex = "1.1.2"
 
+# Spellbrook's own plugins, for the spellbrook variant jar only
+spellbrook = "1.21.11-1.0.0-SNAPSHOT"
+
 # Cloud
 cloud = "2.0.0"
 cloud-paper = "2.0.0-beta.10"
@@ -33,6 +36,11 @@ paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
 
 # Collectables Codex
 codex-api = { module = "com.glance.codex:codex-api", version.ref = "codex" }
+
+# The magic events. The published artifact is the thin jar - the classes it references from
+# gg.spellbrook.common live in the shaded jar the server actually runs, hence both.
+spellbrook-magic = { module = "gg.spellbrook.plugins:magic", version.ref = "spellbrook" }
+spellbrook-common = { module = "gg.spellbrook.plugins:common", version.ref = "spellbrook" }
 
 # Cloud
 cloud-core = { module = "org.incendo:cloud-core", version.ref = "cloud" }
