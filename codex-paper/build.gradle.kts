@@ -147,7 +147,7 @@ paper {
     serverDependencies {
         register("PlaceholderAPI") {
             required = false
-            load = PaperPluginDescription.RelativeLoadOrder.AFTER
+            load = PaperPluginDescription.RelativeLoadOrder.BEFORE
         }
         // Only the spellbrook build has anything that uses this, and it is optional there
         // too. joinClasspath because a probe for its event classes fails without it.
