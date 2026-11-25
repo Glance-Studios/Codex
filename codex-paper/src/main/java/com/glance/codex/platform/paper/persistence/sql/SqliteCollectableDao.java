@@ -21,6 +21,20 @@ public interface SqliteCollectableDao {
         """)
     void createTable();
 
+    @SqlUpdate("""
+        CREATE TABLE IF NOT EXISTS collectable_counts (
+          player_uuid TEXT NOT NULL,
+          namespace TEXT NOT NULL,
+          id TEXT NOT NULL,
+          amount INTEGER NOT NULL DEFAULT 0,
+          PRIMARY KEY (player_uuid, namespace, id)
+        );
+        """)
+    void createCountsTable();
+
+    @SqlUpdate("CREATE INDEX IF NOT EXISTS idx_collectable_counts_player_ns ON collectable_counts(player_uuid, namespace)")
+    void createIdxCountsPlayerNs();
+
     @SqlUpdate("CREATE INDEX IF NOT EXISTS idx_collectable_unlocks_player ON collectable_unlocks(player_uuid)")
     void createIdxPlayer();
 
@@ -94,6 +108,69 @@ public interface SqliteCollectableDao {
         DELETE FROM collectable_unlocks WHERE player_uuid=:player
         """)
     void deleteAllForPlayer(@Bind("player") String player);
+
+    @SqlUpdate("""
+        INSERT INTO collectable_counts (player_uuid, namespace, id, amount)
+        VALUES (:player, :ns, :id, MAX(0, :by))
+        ON CONFLICT(player_uuid, namespace, id)
+        DO UPDATE SET amount = MAX(0, amount + :by)
+        """)
+    void addCount(
+        @Bind("player") String player,
+        @Bind("ns") String namespace,
+        @Bind("id") String id,
+        @Bind("by") long by);
+
+    @SqlQuery("""
+        SELECT amount FROM collectable_counts
+        WHERE player_uuid=:player AND namespace=:ns AND id=:id
+        """)
+    Long getCount(
+        @Bind("player") String player,
+        @Bind("ns") String namespace,
+        @Bind("id") String id);
+
+    @SqlQuery("""
+        SELECT id, amount FROM collectable_counts
+        WHERE player_uuid=:player AND namespace=:ns
+        """)
+    List<CountRow> loadCounts(
+        @Bind("player") String player,
+        @Bind("ns") String namespace);
+
+    @SqlQuery("""
+        SELECT namespace, id, amount FROM collectable_counts
+        WHERE player_uuid=:player
+        """)
+    List<CountRow> loadAllCounts(@Bind("player") String player);
+
+    @SqlUpdate("""
+        DELETE FROM collectable_counts
+        WHERE player_uuid=:player AND namespace=:ns AND id=:id
+        """)
+    int deleteCount(
+        @Bind("player") String player,
+        @Bind("ns") String namespace,
+        @Bind("id") String id);
+
+    @SqlUpdate("""
+        DELETE FROM collectable_counts
+        WHERE player_uuid=:player AND namespace=:ns
+        """)
+    int deleteCountNamespace(
+        @Bind("player") String player,
+        @Bind("ns") String namespace);
+
+    @SqlUpdate("""
+        DELETE FROM collectable_counts WHERE player_uuid=:player
+        """)
+    void deleteAllCountsForPlayer(@Bind("player") String player);
+
+    class CountRow {
+        public String namespace;
+        public String id;
+        public Long amount;
+    }
 
     class Row {
         public String namespace;

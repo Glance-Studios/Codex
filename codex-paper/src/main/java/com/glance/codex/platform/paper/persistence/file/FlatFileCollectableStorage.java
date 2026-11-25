@@ -16,6 +16,8 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -72,56 +74,68 @@ public class FlatFileCollectableStorage implements CollectableStorage {
     @Override
     public CompletableFuture<Boolean> putUnlock(@NotNull UUID playerId, @NotNull String namespace, @NotNull String id, long whenMillis) {
         return CompletableFuture.supplyAsync(() -> {
-            PlayerCollectables data = loadData(playerId);
-            boolean added = data.markUnlock(namespace, id, whenMillis);
-            if (added) saveData(playerId, data);
-            return added;
+            synchronized (fileIOLock) {
+                PlayerCollectables data = loadData(playerId);
+                boolean added = data.markUnlock(namespace, id, whenMillis);
+                if (added) saveData(playerId, data);
+                return added;
+            }
         });
     }
 
     @Override
     public CompletableFuture<Void> recordReplay(@NotNull UUID playerId, @NotNull String namespace, @NotNull String id, long whenMillis) {
         return CompletableFuture.runAsync(() -> {
-            PlayerCollectables data = loadData(playerId);
-            data.markReplay(namespace, id, whenMillis);
-            saveData(playerId, data);
+            synchronized (fileIOLock) {
+                PlayerCollectables data = loadData(playerId);
+                data.markReplay(namespace, id, whenMillis);
+                saveData(playerId, data);
+            }
         });
     }
 
     @Override
     public CompletableFuture<Boolean> deleteUnlock(@NotNull UUID playerId, @NotNull String namespace, @NotNull String id) {
         return CompletableFuture.supplyAsync(() -> {
-            PlayerCollectables data = loadData(playerId);
-            boolean removed = data.unlocks()
-                .getOrDefault(namespace, Set.of())
-                .remove(id);
+            synchronized (fileIOLock) {
+                PlayerCollectables data = loadData(playerId);
+                boolean removed = data.unlocks()
+                    .getOrDefault(namespace, Set.of())
+                    .remove(id);
 
-            var first = data.firstUnlockedAt().get(namespace);
-            if (first != null) first.remove(id);
-            var replay = data.lastReplayedAt().get(namespace);
-            if (replay != null) replay.remove(id);
+                var first = data.firstUnlockedAt().get(namespace);
+                if (first != null) first.remove(id);
+                var replay = data.lastReplayedAt().get(namespace);
+                if (replay != null) replay.remove(id);
+                var counted = data.counts().get(namespace);
+                if (counted != null) counted.remove(id);
 
-            data.unlocks().computeIfPresent(namespace, (ns, set) -> set.isEmpty() ? null : set);
-            data.firstUnlockedAt().computeIfPresent(namespace, (ns, map) -> map.isEmpty() ? null : map);
-            data.lastReplayedAt().computeIfPresent(namespace, (ns, map) -> map.isEmpty() ? null : map);
+                data.unlocks().computeIfPresent(namespace, (ns, set) -> set.isEmpty() ? null : set);
+                data.firstUnlockedAt().computeIfPresent(namespace, (ns, map) -> map.isEmpty() ? null : map);
+                data.lastReplayedAt().computeIfPresent(namespace, (ns, map) -> map.isEmpty() ? null : map);
+                data.counts().computeIfPresent(namespace, (ns, map) -> map.isEmpty() ? null : map);
 
-            if (removed) saveData(playerId, data);
-            return removed;
+                if (removed) saveData(playerId, data);
+                return removed;
+            }
         });
     }
 
     @Override
     public CompletableFuture<Integer> clearNamespace(@NotNull UUID playerId, @NotNull String namespace) {
         return CompletableFuture.supplyAsync(() -> {
-            PlayerCollectables data = loadData(playerId);
-            int count = data.unlocks().getOrDefault(namespace, Set.of()).size();
+            synchronized (fileIOLock) {
+                PlayerCollectables data = loadData(playerId);
+                int count = data.unlocks().getOrDefault(namespace, Set.of()).size();
+                boolean hadCounts = data.counts().remove(namespace) != null;
 
-            data.unlocks().remove(namespace);
-            data.firstUnlockedAt().remove(namespace);
-            data.lastReplayedAt().remove(namespace);
+                data.unlocks().remove(namespace);
+                data.firstUnlockedAt().remove(namespace);
+                data.lastReplayedAt().remove(namespace);
 
-            if (count > 0) saveData(playerId, data);
-            return count;
+                if (count > 0 || hadCounts) saveData(playerId, data);
+                return count;
+            }
         });
     }
 
@@ -142,6 +156,35 @@ public class FlatFileCollectableStorage implements CollectableStorage {
     @Override
     public CompletableFuture<Boolean> isUnlocked(@NotNull UUID playerId, @NotNull String namespace, @NotNull String id) {
         return CompletableFuture.supplyAsync(() -> loadData(playerId).isUnlocked(namespace, id));
+    }
+
+    @Override
+    public CompletableFuture<Long> addCount(
+        @NotNull UUID playerId, @NotNull String namespace, @NotNull String id, long by
+    ) {
+        return CompletableFuture.supplyAsync(() -> {
+            synchronized (fileIOLock) {
+                PlayerCollectables data = loadData(playerId);
+                long next = data.addCount(namespace, id, by);
+                saveData(playerId, data);
+                return next;
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Long> getCount(
+        @NotNull UUID playerId, @NotNull String namespace, @NotNull String id
+    ) {
+        return CompletableFuture.supplyAsync(() -> loadData(playerId).count(namespace, id));
+    }
+
+    @Override
+    public CompletableFuture<Map<String, Long>> loadCounts(
+        @NotNull UUID playerId, @NotNull String namespace
+    ) {
+        return CompletableFuture.supplyAsync(() ->
+                new HashMap<>(loadData(playerId).counts().getOrDefault(namespace, Map.of())));
     }
 
     @Override

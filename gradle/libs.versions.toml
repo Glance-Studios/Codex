@@ -2,7 +2,7 @@
 paper = "1.21.11-R0.1-SNAPSHOT"
 
 # Collectables Codex API
-codex = "1.1.2"
+codex = "1.1.3"
 
 # Spellbrook's own plugins, for the spellbrook variant jar only
 spellbrook = "1.21.11-1.0.0-SNAPSHOT"

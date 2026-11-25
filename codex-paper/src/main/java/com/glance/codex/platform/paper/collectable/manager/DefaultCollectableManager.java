@@ -290,6 +290,23 @@ public class DefaultCollectableManager implements CollectableManager, Listener {
     }
 
     @Override
+    public CompletableFuture<Long> addCount(@NotNull Player player, @NotNull NamespacedKey key, long by) {
+        return storageProvider.get()
+                .addCount(player.getUniqueId(), key.getNamespace(), key.getKey(), by);
+    }
+
+    @Override
+    public CompletableFuture<Long> count(@NotNull Player player, @NotNull NamespacedKey key) {
+        return storageProvider.get()
+                .getCount(player.getUniqueId(), key.getNamespace(), key.getKey());
+    }
+
+    @Override
+    public CompletableFuture<Map<String, Long>> counts(@NotNull Player player, @NotNull String namespace) {
+        return storageProvider.get().loadCounts(player.getUniqueId(), namespace);
+    }
+
+    @Override
     public CompletableFuture<Boolean> relock(@NotNull Player player, @NotNull NamespacedKey key) {
         return storageProvider.get().deleteUnlock(player.getUniqueId(), key.getNamespace(), key.getKey());
     }

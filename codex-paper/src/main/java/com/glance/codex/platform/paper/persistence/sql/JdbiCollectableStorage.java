@@ -82,8 +82,10 @@ public class JdbiCollectableStorage implements CollectableStorage {
     public CompletableFuture<Boolean> deleteUnlock(@NotNull UUID playerId, @NotNull String namespace, @NotNull String id) {
         return CompletableFuture.supplyAsync(() -> {
            if (!isSqlite()) throw new UnsupportedOperationException();
-           int changed = sql.jdbi().withExtension(SqliteCollectableDao.class,
-                   dao -> dao.deleteOne(playerId.toString(), namespace, id));
+           int changed = sql.jdbi().withExtension(SqliteCollectableDao.class, dao -> {
+               dao.deleteCount(playerId.toString(), namespace, id);
+               return dao.deleteOne(playerId.toString(), namespace, id);
+           });
            return changed > 0;
         });
     }
@@ -92,8 +94,10 @@ public class JdbiCollectableStorage implements CollectableStorage {
     public CompletableFuture<Integer> clearNamespace(@NotNull UUID playerId, @NotNull String namespace) {
         return CompletableFuture.supplyAsync(() -> {
             if (!isSqlite()) throw new UnsupportedOperationException();
-            return sql.jdbi().withExtension(SqliteCollectableDao.class,
-                    dao -> dao.deleteNamespace(playerId.toString(), namespace));
+            return sql.jdbi().withExtension(SqliteCollectableDao.class, dao -> {
+                dao.deleteCountNamespace(playerId.toString(), namespace);
+                return dao.deleteNamespace(playerId.toString(), namespace);
+            });
         });
     }
 
@@ -101,8 +105,10 @@ public class JdbiCollectableStorage implements CollectableStorage {
     public CompletableFuture<Void> clearAll(@NotNull UUID playerId) {
         return CompletableFuture.runAsync(() -> {
             if (!isSqlite()) throw new UnsupportedOperationException();
-            sql.jdbi().useExtension(SqliteCollectableDao.class,
-                    dao -> dao.deleteAllForPlayer(playerId.toString()));
+            sql.jdbi().useExtension(SqliteCollectableDao.class, dao -> {
+                dao.deleteAllCountsForPlayer(playerId.toString());
+                dao.deleteAllForPlayer(playerId.toString());
+            });
         });
     }
 
@@ -114,6 +120,51 @@ public class JdbiCollectableStorage implements CollectableStorage {
                         dao -> dao.exists(playerId.toString(), namespace, id))
                     : false;
             return Boolean.TRUE.equals(result);
+        });
+    }
+
+    @Override
+    public CompletableFuture<Long> addCount(
+        @NotNull UUID playerId, @NotNull String namespace, @NotNull String id, long by
+    ) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (!isSqlite()) throw new UnsupportedOperationException();
+            return sql.jdbi().inTransaction(handle -> {
+                var dao = handle.attach(SqliteCollectableDao.class);
+                dao.addCount(playerId.toString(), namespace, id, by);
+                Long now = dao.getCount(playerId.toString(), namespace, id);
+                return now == null ? 0L : now;
+            });
+        });
+    }
+
+    @Override
+    public CompletableFuture<Long> getCount(
+        @NotNull UUID playerId, @NotNull String namespace, @NotNull String id
+    ) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (!isSqlite()) throw new UnsupportedOperationException();
+            Long amount = sql.jdbi().withExtension(SqliteCollectableDao.class,
+                    dao -> dao.getCount(playerId.toString(), namespace, id));
+            return amount == null ? 0L : amount;
+        });
+    }
+
+    @Override
+    public CompletableFuture<Map<String, Long>> loadCounts(
+        @NotNull UUID playerId, @NotNull String namespace
+    ) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (!isSqlite()) throw new UnsupportedOperationException();
+            List<SqliteCollectableDao.CountRow> rows = sql.jdbi().withExtension(
+                    SqliteCollectableDao.class,
+                    dao -> dao.loadCounts(playerId.toString(), namespace));
+
+            Map<String, Long> counts = new HashMap<>();
+            for (SqliteCollectableDao.CountRow row : rows) {
+                counts.put(row.id, row.amount == null ? 0L : row.amount);
+            }
+            return counts;
         });
     }
 
@@ -145,6 +196,13 @@ public class JdbiCollectableStorage implements CollectableStorage {
                 throw new UnsupportedOperationException();
             }
 
+            for (SqliteCollectableDao.CountRow r : sql.jdbi().withExtension(
+                    SqliteCollectableDao.class, dao -> dao.loadAllCounts(playerId.toString()))) {
+                snapshot.counts()
+                        .computeIfAbsent(r.namespace, k -> new HashMap<>())
+                        .put(r.id, r.amount == null ? 0L : r.amount);
+            }
+
             return snapshot;
         });
     }
@@ -157,6 +215,9 @@ public class JdbiCollectableStorage implements CollectableStorage {
                if (isSqlite()) {
                    var dao = handle.attach(SqliteCollectableDao.class);
                    dao.deleteAllForPlayer(uuid);
+                   dao.deleteAllCountsForPlayer(uuid);
+                   snapshot.counts().forEach((ns, byId) ->
+                           byId.forEach((id, amount) -> dao.addCount(uuid, ns, id, amount)));
                    long now = System.currentTimeMillis();
                    snapshot.unlocks().forEach((ns, ids) -> {
                        for (String id : ids) {

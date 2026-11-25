@@ -55,6 +55,8 @@ public final class SqlBootstrap {
                 dao.createTable();
                 dao.createIdxPlayer();
                 dao.createIdxPlayerNs();
+                dao.createCountsTable();
+                dao.createIdxCountsPlayerNs();
             });
         } else {
             throw new UnsupportedOperationException();
