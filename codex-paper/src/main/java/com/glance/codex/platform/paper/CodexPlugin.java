@@ -7,6 +7,7 @@ import com.glance.codex.platform.paper.config.engine.ConfigController;
 import com.glance.codex.platform.paper.config.engine.codec.ConfigInterpolator;
 import com.glance.codex.platform.paper.inject.CodexModule;
 import com.glance.codex.platform.paper.inject.PaperComponentScanner;
+import com.glance.codex.platform.paper.persistence.config.CollectableStorageProvider;
 import com.glance.codex.platform.paper.text.PluginPlaceholderSource;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -64,6 +65,8 @@ public class CodexPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         PaperComponentScanner.scanAndCleanup(this, this.injector);
+        // After the managers, so nothing is still writing when the connections go back
+        this.injector.getInstance(CollectableStorageProvider.class).shutdown();
     }
 
     public @NotNull PlaceholderService placeholderService() {

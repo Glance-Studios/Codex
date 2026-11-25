@@ -18,6 +18,10 @@ placeholderapi = "2.11.6"
 jdbi = "3.49.5"
 hikari = "5.1.0"
 sqlite = "3.46.0.1"
+mariadb = "3.5.10"
+
+# Testing
+junit = "5.11.4"
 
 # Utility
 lombok = "1.18.42"
@@ -60,6 +64,11 @@ jdbi-core = { module = "org.jdbi:jdbi3-core", version.ref = "jdbi" }
 jdbi-sqlobject = { module = "org.jdbi:jdbi3-sqlobject", version.ref = "jdbi" }
 hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
 sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
+mariadb = { module = "org.mariadb.jdbc:mariadb-java-client", version.ref = "mariadb" }
+
+# Testing
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version = "1.11.4" }
 
 # Other
 placeholderapi = { module = "me.clip:placeholderapi", version.ref = "placeholderapi" }

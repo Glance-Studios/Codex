@@ -16,17 +16,19 @@ import lombok.experimental.Accessors;
 @Config(section = "storage", supportHotReload = false)
 public class CollectableStorageConfig implements Config.Handler {
 
-    @ConfigPath("backend") private Backend backend = Backend.FLATFILE;
+    @ConfigPath(value = "backend", comments = "One of FLATFILE, SQLITE, MYSQL or MARIADB")
+    private Backend backend = Backend.FLATFILE;
 
     @ConfigPath(value = "flatfile.dir", comments = "Used when backend = 'FLATFILE'")
     private String flatFileDir = "playerdata/collectables";
 
-    @ConfigPath("sql.jdbcUrl") private String jdbcUrl = "jdbc:sqlite:${plugin.data}/collectables.db";
+    @ConfigPath(value = "sql.jdbcUrl", comments = "Ignored when a database.properties sits beside this file")
+    private String jdbcUrl = "jdbc:sqlite:${plugin.data}/collectables.db";
     @ConfigPath("sql.username") private String username = "";
     @ConfigPath("sql.password") private String password = "";
     @ConfigPath("sql.pool.maxSize") private int maxPool = 6;
     @ConfigPath("sql.pool.minIdle") private int minIdle = 2;
 
-    public enum Backend { FLATFILE, SQLITE, MYSQL }
+    public enum Backend { FLATFILE, SQLITE, MYSQL, MARIADB }
 
 }

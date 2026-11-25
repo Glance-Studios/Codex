@@ -1,9 +1,9 @@
 storage:
-  backend: FLATFILE
+  backend: FLATFILE # One of FLATFILE, SQLITE, MYSQL or MARIADB
   flatfile:
     dir: playerdata/collectables # Used when backend = 'FLATFILE'
   sql:
-    jdbcUrl: jdbc:sqlite:${plugin.data}/collectables.db
+    jdbcUrl: jdbc:sqlite:${plugin.data}/collectables.db # Ignored when a database.properties sits beside this file
     username: ''
     password: ''
     pool:

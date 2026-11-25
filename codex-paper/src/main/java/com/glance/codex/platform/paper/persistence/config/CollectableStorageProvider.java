@@ -2,6 +2,7 @@ package com.glance.codex.platform.paper.persistence.config;
 
 import com.glance.codex.api.data.storage.CollectableStorage;
 import com.glance.codex.platform.paper.persistence.file.FlatFileCollectableStorage;
+import com.glance.codex.platform.paper.persistence.file.FlatFileImport;
 import com.glance.codex.platform.paper.persistence.sql.JdbiCollectableStorage;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -9,6 +10,8 @@ import com.google.inject.Singleton;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.io.File;
 
 @Singleton
 public class CollectableStorageProvider implements Provider<CollectableStorage> {
@@ -32,6 +35,12 @@ public class CollectableStorageProvider implements Provider<CollectableStorage> 
         this.sql = sql;
     }
 
+    /**
+     * Resolves the configured store, and fails rather than quietly using a different one.
+     *
+     * Falling back to flat files would show every player an empty journal and then collect new
+     * progress in a second place, leaving two stores to reconcile by hand.
+     */
     @Override
     public CollectableStorage get() {
         if (this.cached != null) return cached;
@@ -42,24 +51,34 @@ public class CollectableStorageProvider implements Provider<CollectableStorage> 
             return cached = flat.get();
         }
 
-        if (backend == CollectableStorageConfig.Backend.SQLITE) {
-            if (!classPresent("org.sqlite.JDBC")) {
-                plugin.getLogger().warning("SQLite driver missing. Falling back to FlatFile.");
-                return cached = flat.get();
-            }
-        } else if (backend == CollectableStorageConfig.Backend.MYSQL) {
-            if (!classPresent("com.mysql.cj.jdbc.Driver")) {
-                plugin.getLogger().warning("MySQL driver missing. Falling back to FlatFile.");
-                return cached = flat.get();
-            }
-        }
-
         plugin.getLogger().info("Using SQL storage via JDBI (" + backend + ").");
-        return cached = sql.get();
+        cached = sql.get();
+        importFlatFiles(cached);
+        return cached;
     }
 
-    private boolean classPresent(String name) {
-        try { Class.forName(name); return true; } catch (ClassNotFoundException e) { return false; }
+    /** Releases the connection pool, if one was ever opened. Safe to call more than once. */
+    public void shutdown() {
+        if (!(cached instanceof AutoCloseable closeable)) return;
+        try {
+            closeable.close();
+        } catch (Exception e) {
+            plugin.getLogger().warning("Could not close the storage cleanly: " + e.getMessage());
+        } finally {
+            cached = null;
+        }
+    }
+
+    /**
+     * Carries any player data left by an earlier FLATFILE install into the SQL store.
+     *
+     * Done here rather than on a command, so a server that has its backend switched under it does
+     * not come up with every journal looking empty.
+     */
+    private void importFlatFiles(@NotNull CollectableStorage target) {
+        File directory = new File(plugin.getDataFolder(), cfg.flatFileDir());
+        FlatFileImport job = new FlatFileImport(directory, target, plugin.getLogger());
+        if (job.pending()) job.run();
     }
 
 }
